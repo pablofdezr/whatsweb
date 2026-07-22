@@ -79,12 +79,21 @@ Docusaurus's heavy dependencies never touch the SDK package.
 
 ## Releasing
 
-1. The package is published as `@whatsweb/core` (the `@whatsweb` npm org).
-2. Update `CHANGELOG.md`.
-3. `npm login`, then create the `NPM_TOKEN` repo secret for CI.
-4. Bump the version and tag: `npm version <patch|minor|major>` then
-   `git push --follow-tags`. The `publish.yml` workflow builds and publishes
-   (`prepublishOnly` runs clean + typecheck + build).
+The package is published as `@whatsweb/core` (the `@whatsweb` npm org). Releases
+are automated by tags — you don't publish from your machine:
+
+1. Update `CHANGELOG.md`.
+2. Bump the version and tag it:
+
+   ```bash
+   npm version <patch|minor|major>   # updates package.json + creates a git tag
+   git push --follow-tags
+   ```
+
+3. Pushing the `v*` tag triggers `.github/workflows/publish.yml`, which runs the
+   tests, builds, `npm publish --provenance --access public` (auth via the
+   `NPM_TOKEN` repo secret, already configured), and creates a GitHub Release
+   with auto-generated notes.
 
 Preview the tarball contents with `npm pack --dry-run` (only `dist/`, `README`,
 `CHANGELOG` and `LICENSE` are published).
