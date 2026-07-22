@@ -25,7 +25,8 @@ npm test               # unit tests (node:test)
 npm run lint           # ESLint
 npm run format         # Prettier --write
 npm run format:check   # Prettier --check
-npm run docs           # generate API docs (TypeDoc) into docs/
+npm run docs           # build the Docusaurus docs site (website/ → website/build)
+npm run docs:dev       # run the docs site locally with hot reload
 npm run example:bot                    # demo bot, callback style (scan the QR)
 npm run example:async                  # same bot, async/await style
 npm run example:multi                  # manage multiple accounts
@@ -66,11 +67,15 @@ the cryptography (Noise handshake, Signal, protobuf, media encryption).
   plus a `compat` job that installs, builds and tests with **pnpm** and **Bun**.
 - **`publish.yml`** — publishes to npm on `v*` tags (needs an `NPM_TOKEN` repo
   secret).
-- **`docs.yml`** — builds the landing page (`web/index.html`) plus the TypeDoc
-  reference and deploys them to **GitHub Pages** on every push to `main`. The
-  site is served at `https://pablofdezr.github.io/whatsweb/` (landing) and
-  `/api/` (API reference). Pages must be enabled with the "GitHub Actions"
-  source (this repo already is).
+- **`docs.yml`** — builds the hand-made landing page (`web/index.html`) plus the
+  Docusaurus docs site (`website/`, which generates the API reference from the
+  source via `docusaurus-plugin-typedoc`) and deploys them to **GitHub Pages** on
+  every push to `main`. Served at `https://pablofdezr.github.io/whatsweb/`
+  (landing) and `/docs/` (documentation). Pages must be enabled with the
+  "GitHub Actions" source (this repo already is).
+
+The docs site lives in `website/` with its **own** `package.json`/lockfile, so
+Docusaurus's heavy dependencies never touch the SDK package.
 
 ## Releasing
 

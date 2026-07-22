@@ -1,0 +1,11 @@
+# Dependencies
+/node_modules
+
+# Generated (TypeDoc output + Docusaurus build)
+/docs
+/build
+/.docusaurus
+
+# Misc
+.DS_Store
+npm-debug.log*

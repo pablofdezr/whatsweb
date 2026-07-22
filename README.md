@@ -340,9 +340,9 @@ await Promise.all(clients.map((wa) => wa.start()));
 - `socket` — the raw Baileys `WASocket` (escape hatch).
 
 Full typed API reference:
-**[pablofdezr.github.io/whatsweb/api](https://pablofdezr.github.io/whatsweb/api/)**
-(or run `npm run docs` locally). Changes are listed in
-[`CHANGELOG.md`](./CHANGELOG.md).
+**[pablofdezr.github.io/whatsweb/docs](https://pablofdezr.github.io/whatsweb/docs/)**
+(built with Docusaurus + TypeDoc; run `npm run docs` locally). Changes are listed
+in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Disclaimer
 

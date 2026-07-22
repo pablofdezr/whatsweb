@@ -25,14 +25,14 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'npm'
-      - run: npm ci
-      - run: npm run docs
-      - name: Assemble site (landing page + API reference)
+      - run: npm ci # root deps (TypeDoc resolves the SDK's imports from here)
+      - run: npm --prefix website ci
+      - run: npm --prefix website run build
+      - name: Assemble site (hand-made landing + Docusaurus docs)
         run: |
-          rm -rf site
-          mkdir -p site
+          mkdir -p site/docs
           cp web/index.html site/index.html
-          cp -r docs site/api
+          cp -r website/build/. site/docs/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

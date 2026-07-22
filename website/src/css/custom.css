@@ -1,0 +1,27 @@
+/**
+ * whatsweb documentation theme.
+ * Primary color set to a WhatsApp green.
+ */
+
+:root {
+  --ifm-color-primary: #128c4b;
+  --ifm-color-primary-dark: #107e44;
+  --ifm-color-primary-darker: #0f7740;
+  --ifm-color-primary-darkest: #0c6235;
+  --ifm-color-primary-light: #14a055;
+  --ifm-color-primary-lighter: #15a75a;
+  --ifm-color-primary-lightest: #18bd65;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #25d366;
+  --ifm-color-primary-dark: #1fc25c;
+  --ifm-color-primary-darker: #1db757;
+  --ifm-color-primary-darkest: #189748;
+  --ifm-color-primary-light: #3bd775;
+  --ifm-color-primary-lighter: #47d97d;
+  --ifm-color-primary-lightest: #6ee096;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}

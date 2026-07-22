@@ -2,8 +2,12 @@ node_modules/
 dist/
 docs/
 site/
-*.log
 .DS_Store
+*.log
+
+# Docusaurus site (website/) generated output
+website/build/
+website/.docusaurus/
 
 # npm's package-lock.json is the committed, canonical lockfile.
 # Ignore the alternative package managers' lockfiles to keep a single source.
