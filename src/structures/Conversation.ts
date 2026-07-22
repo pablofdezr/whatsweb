@@ -1,6 +1,7 @@
 import type { Client } from '../client/Client.js';
 import type { Context } from '../router/Context.js';
 import type { ConversationState } from '../state/ConversationState.js';
+import { parseConfirmation } from '../util/confirmation.js';
 import { Chat } from './Chat.js';
 import type { Message } from './Message.js';
 
@@ -23,6 +24,18 @@ export interface AskOptions {
   timeoutMs?: number;
   /** Abort the wait. */
   signal?: AbortSignal;
+}
+
+/** Options for {@link Conversation.confirm}. */
+export interface ConfirmOptions extends AskOptions {
+  /** Accepted affirmative answers. Defaults cover English + Spanish + 👍/✅. */
+  yes?: string[];
+  /** Accepted negative answers. Defaults cover English + Spanish + 👎/❌. */
+  no?: string[];
+  /** How many times to re-ask on an unrecognized answer. Defaults to `1`. */
+  retries?: number;
+  /** Message sent when the answer isn't recognized. */
+  invalidMessage?: string;
 }
 
 /**
@@ -97,5 +110,33 @@ export class Conversation extends Chat {
   /** Like {@link ask}, but resolves with the reply text directly. */
   async askText(question: string, options: AskOptions = {}): Promise<string> {
     return (await this.ask(question, options)).text;
+  }
+
+  /**
+   * Asks the user to confirm and resolves to `true`/`false`. Great for
+   * confirming a value ("Is your email …? (yes/no)"). Unrecognized answers are
+   * re-prompted up to `retries` times; if still unclear, resolves to `false`.
+   *
+   * @example
+   * ```ts
+   * const email = await convo.askText('What is your email?');
+   * if (await convo.confirm(`Confirm your email is ${email}? (yes/no)`)) {
+   *   await convo.state.set('email', email);
+   * }
+   * ```
+   */
+  async confirm(question: string, options: ConfirmOptions = {}): Promise<boolean> {
+    const retries = options.retries ?? 1;
+    let prompt = question;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const reply = await this.askText(prompt, {
+        timeoutMs: options.timeoutMs,
+        signal: options.signal,
+      });
+      const result = parseConfirmation(reply, { yes: options.yes, no: options.no });
+      if (result !== undefined) return result;
+      prompt = options.invalidMessage ?? 'Please reply yes or no.';
+    }
+    return false;
   }
 }

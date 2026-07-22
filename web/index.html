@@ -409,6 +409,21 @@ wa.command('signup', async (ctx) => {
           </article>
 
           <article class="ex">
+            <h3>Confirm a value</h3>
+            <p class="desc">Ask yes/no and get a boolean — accepted answers are configurable (defaults cover en/es + 👍/👎).</p>
+            <div class="code"><script type="text/plain">
+wa.command('email', async (ctx) => {
+  const convo = ctx.conversation;
+  const email = await convo.askText('What is your email?');
+  if (await convo.confirm(`Confirm your email is ${email}? (yes/no)`)) {
+    await convo.state.set('email', email);
+    await convo.text('Saved ✅');
+  }
+});
+</script></div>
+          </article>
+
+          <article class="ex">
             <h3>Bring your own agent (LLM)</h3>
             <p class="desc">whatsweb is unopinionated about LLMs — it hands you the transcript, you drive the model (here, the Vercel AI SDK).</p>
             <div class="code"><script type="text/plain">

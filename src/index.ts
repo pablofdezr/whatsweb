@@ -26,7 +26,12 @@ export type { Handler, Middleware, MiddlewareNext, Trigger } from './router/type
 export { Message } from './structures/Message.js';
 export { Chat } from './structures/Chat.js';
 export { Conversation } from './structures/Conversation.js';
-export type { AskOptions, ChatMessage, ChatRole } from './structures/Conversation.js';
+export type {
+  AskOptions,
+  ConfirmOptions,
+  ChatMessage,
+  ChatRole,
+} from './structures/Conversation.js';
 export { Group } from './structures/Group.js';
 export { History } from './structures/History.js';
 export { Sender } from './structures/Sender.js';
@@ -70,6 +75,7 @@ export {
 export { extractText, getMessageType, messageHasMedia, MEDIA_TYPES } from './util/content.js';
 export { silentLogger } from './util/logger.js';
 export type { Logger } from './util/logger.js';
+export { parseConfirmation, DEFAULT_YES, DEFAULT_NO } from './util/confirmation.js';
 export { eventStream } from './util/eventStream.js';
 export type { EventStreamOptions } from './util/eventStream.js';
 

@@ -247,6 +247,25 @@ wa.command('signup', async (ctx) => {
 });
 ```
 
+### Confirm a value
+
+`confirm` sends a yes/no question and interprets the reply (accepted answers are
+configurable; defaults cover English + Spanish + 👍/👎). Unclear answers are
+re-prompted.
+
+```ts
+wa.command('email', async (ctx) => {
+  const convo = ctx.conversation;
+  const email = await convo.askText('What is your email?');
+  if (await convo.confirm(`Confirm your email is ${email}? (yes/no)`)) {
+    await convo.state.set('email', email);
+    await convo.text('Saved ✅');
+  } else {
+    await convo.text('No problem — send me the correct one.');
+  }
+});
+```
+
 ### Per-user state
 
 State is scoped per chat and persisted through a pluggable store (in-memory by
