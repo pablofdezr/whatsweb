@@ -1,0 +1,79 @@
+{
+  "name": "@pablofdezruiz/whatsweb",
+  "version": "0.1.0",
+  "description": "SDK con DX excelente para WhatsApp Web sin navegador (sin Puppeteer). Router de comandos + middleware, helpers de envío y emparejamiento por código, sobre el protocolo Multi-Device (Baileys 7).",
+  "license": "MIT",
+  "author": "Pablo Fernández Ruiz <pablofdezruiz@gmail.com>",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "lint": "eslint .",
+    "format": "prettier --write \"{src,examples,test}/**/*.ts\"",
+    "format:check": "prettier --check \"{src,examples,test}/**/*.ts\"",
+    "docs": "typedoc",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "prepublishOnly": "npm run clean && npm run typecheck && npm run build",
+    "example:bot": "tsx examples/ping-bot.ts",
+    "example:async": "tsx examples/async-bot.ts",
+    "example:send": "tsx examples/send-message.ts",
+    "example:pair": "tsx examples/pair-with-code.ts"
+  },
+  "dependencies": {
+    "baileys": "7.0.0-rc13",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/node": "^22.10.0",
+    "@types/qrcode-terminal": "^0.12.2",
+    "eslint": "^9.15.0",
+    "prettier": "^3.4.1",
+    "tsx": "^4.23.1",
+    "typedoc": "^0.28.20",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pablofdezr/whatsweb.git"
+  },
+  "homepage": "https://github.com/pablofdezr/whatsweb#readme",
+  "bugs": {
+    "url": "https://github.com/pablofdezr/whatsweb/issues"
+  },
+  "keywords": [
+    "whatsapp",
+    "whatsapp-web",
+    "baileys",
+    "sdk",
+    "bot",
+    "multi-device",
+    "no-puppeteer",
+    "lid",
+    "esm"
+  ]
+}

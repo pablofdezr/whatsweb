@@ -1,0 +1,10 @@
+node_modules/
+dist/
+docs/
+*.log
+.DS_Store
+
+# Session state / credentials (NEVER commit to git!)
+.whatsweb_auth/
+.wwebjs_auth/
+auth_info*/
