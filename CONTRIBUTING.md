@@ -49,13 +49,11 @@ the cryptography (Noise handshake, Signal, protobuf, media encryption).
 - **`ci.yml`** — lint, format check, typecheck, build and tests on Node 20 & 22.
 - **`publish.yml`** — publishes to npm on `v*` tags (needs an `NPM_TOKEN` repo
   secret).
-- **`docs.yml`** — builds the TypeDoc reference and uploads it as a build
-  artifact on every push to `main`.
-
-> To host the docs on **GitHub Pages** you need a public repo (free plan) or a
-> paid plan for private repos. If you make the repo public, swap the last step of
-> `docs.yml` for `actions/configure-pages` + `upload-pages-artifact` +
-> `deploy-pages` (with `pages: write` and `id-token: write` permissions).
+- **`docs.yml`** — builds the landing page (`web/index.html`) plus the TypeDoc
+  reference and deploys them to **GitHub Pages** on every push to `main`. The
+  site is served at `https://pablofdezr.github.io/whatsweb/` (landing) and
+  `/api/` (API reference). Pages must be enabled with the "GitHub Actions"
+  source (this repo already is).
 
 ## Releasing
 

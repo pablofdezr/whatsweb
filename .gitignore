@@ -1,6 +1,7 @@
 node_modules/
 dist/
 docs/
+site/
 *.log
 .DS_Store
 

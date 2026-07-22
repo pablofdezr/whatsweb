@@ -1,9 +1,12 @@
 # whatsweb
 
+[![docs](https://img.shields.io/badge/docs-website-25D366.svg)](https://pablofdezr.github.io/whatsweb/)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/types-included-blue.svg)](./dist/index.d.ts)
 [![Baileys](https://img.shields.io/badge/built%20on-Baileys%207-25D366.svg)](https://github.com/WhiskeySockets/Baileys)
+
+📖 **[Website & API documentation](https://pablofdezr.github.io/whatsweb/)**
 
 A great-DX SDK for WhatsApp Web with **no browser** — no Puppeteer, no headless
 Chromium. It speaks the native Multi-Device protocol directly over a WebSocket
@@ -315,7 +318,9 @@ const wa = createClient({
 - Queries: `chat(id)` / `isRegisteredUser` / `getLid`.
 - `socket` — the raw Baileys `WASocket` (escape hatch).
 
-Full typed API reference: run `npm run docs` (TypeDoc). Changes are listed in
+Full typed API reference:
+**[pablofdezr.github.io/whatsweb/api](https://pablofdezr.github.io/whatsweb/api/)**
+(or run `npm run docs` locally). Changes are listed in
 [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Disclaimer

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>whatsweb — WhatsApp Web SDK with no browser</title>
+    <meta
+      name="description"
+      content="A great-DX, fully-typed SDK for WhatsApp Web with no browser. Command router, media helpers, groups, presence and more, on the native Multi-Device protocol."
+    />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --bg-soft: #f6f8f7;
+        --fg: #0e1a14;
+        --fg-soft: #566;
+        --border: #e3e8e5;
+        --accent: #128c4b;
+        --accent-2: #25d366;
+        --code-bg: #0e1a14;
+        --code-fg: #e7f3ec;
+        --radius: 14px;
+        --maxw: 940px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b0f0d;
+          --bg-soft: #10161300;
+          --fg: #e8efe9;
+          --fg-soft: #9fb0a6;
+          --border: #1e2823;
+          --accent: #34d17d;
+          --accent-2: #25d366;
+          --code-bg: #0f1512;
+          --code-fg: #e7f3ec;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: var(--fg);
+        background: var(--bg);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+      header.hero {
+        text-align: center;
+        padding: 84px 20px 56px;
+        background:
+          radial-gradient(1200px 380px at 50% -120px, rgba(37, 211, 102, 0.14), transparent 70%);
+        border-bottom: 1px solid var(--border);
+      }
+      .logo { font-size: 60px; line-height: 1; }
+      h1 { font-size: clamp(2.4rem, 6vw, 3.4rem); margin: 14px 0 6px; letter-spacing: -0.02em; }
+      .tagline { font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: var(--fg-soft); margin: 0 auto 8px; max-width: 640px; }
+      .sub { color: var(--fg-soft); max-width: 620px; margin: 0 auto; }
+
+      .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 22px 0 26px; }
+      .badge {
+        font-size: 0.78rem; padding: 4px 10px; border-radius: 999px;
+        background: var(--bg-soft); border: 1px solid var(--border); color: var(--fg-soft);
+      }
+
+      .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 11px 20px; border-radius: 999px; font-weight: 600; font-size: 0.98rem;
+        border: 1px solid var(--border); transition: transform 0.06s ease, background 0.15s ease;
+      }
+      .btn:hover { text-decoration: none; transform: translateY(-1px); }
+      .btn-primary { background: var(--accent-2); color: #052012; border-color: transparent; }
+      .btn-ghost { background: var(--bg-soft); color: var(--fg); }
+
+      section { padding: 56px 0; }
+      section h2 { font-size: 1.6rem; margin: 0 0 24px; letter-spacing: -0.01em; }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+      .card {
+        background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 20px;
+      }
+      .card .ico { font-size: 1.5rem; }
+      .card h3 { margin: 10px 0 6px; font-size: 1.05rem; }
+      .card p { margin: 0; color: var(--fg-soft); font-size: 0.94rem; }
+
+      pre {
+        background: var(--code-bg); color: var(--code-fg); border-radius: var(--radius);
+        padding: 20px; overflow-x: auto; font-size: 0.9rem; line-height: 1.7;
+        border: 1px solid var(--border);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .tok-key { color: #ff7b9c; }
+      .tok-fn { color: #7cc4ff; }
+      .tok-str { color: #7ee2a8; }
+      .tok-com { color: #6b7d73; }
+
+      .install {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 14px 18px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .install .prompt { color: var(--accent); }
+
+      .split { display: grid; grid-template-columns: 1fr; gap: 20px; }
+      @media (min-width: 760px) { .split { grid-template-columns: 1fr 1fr; align-items: start; } }
+
+      footer {
+        border-top: 1px solid var(--border); padding: 32px 20px; text-align: center;
+        color: var(--fg-soft); font-size: 0.88rem;
+      }
+      .disclaimer { max-width: 680px; margin: 0 auto 12px; }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="logo">💬</div>
+      <h1>whatsweb</h1>
+      <p class="tagline">A great-DX WhatsApp Web SDK with <strong>no browser</strong>.</p>
+      <p class="sub">
+        No Puppeteer, no headless Chromium. It speaks the native Multi-Device
+        protocol directly over a WebSocket, wrapped in a fully-typed, bot-friendly API.
+      </p>
+      <div class="badges">
+        <span class="badge">TypeScript · ESM</span>
+        <span class="badge">Node ≥ 20</span>
+        <span class="badge">Built on Baileys 7</span>
+        <span class="badge">MIT</span>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="./api/">📚 API Docs</a>
+        <a class="btn btn-ghost" href="https://github.com/pablofdezr/whatsweb">★ GitHub</a>
+        <a class="btn btn-ghost" href="#quickstart">Quick start</a>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section id="features">
+        <h2>Features</h2>
+        <div class="grid">
+          <div class="card"><div class="ico">🚀</div><h3>No browser</h3><p>A fraction of the RAM and startup time of Puppeteer-based clients.</p></div>
+          <div class="card"><div class="ico">🤖</div><h3>Command router</h3><p><code>command</code>, <code>hears</code>, middleware and a rich <code>Context</code>.</p></div>
+          <div class="card"><div class="ico">🔀</div><h3>Two styles</h3><p>Event callbacks or a linear <code>for await</code> async iterator.</p></div>
+          <div class="card"><div class="ico">📎</div><h3>Media anywhere</h3><p>Path, http(s)/S3 URL, Buffer or stream — with auto type detection.</p></div>
+          <div class="card"><div class="ico">💬</div><h3>Rich messages</h3><p>Polls, mentions, stickers, contacts, edit / delete / forward.</p></div>
+          <div class="card"><div class="ico">👥</div><h3>Groups</h3><p>Metadata, participants, invite links, create / join / leave.</p></div>
+          <div class="card"><div class="ico">👤</div><h3>Presence & profile</h3><p>Presence, profile pictures, status and block list.</p></div>
+          <div class="card"><div class="ico">🛟</div><h3>Resilient</h3><p>Auto-reconnect with backoff and optional send rate-limiting.</p></div>
+          <div class="card"><div class="ico">🆔</div><h3>LID-aware</h3><p>Supports WhatsApp's anonymous identity system out of the box.</p></div>
+        </div>
+      </section>
+
+      <section id="quickstart">
+        <h2>Quick start</h2>
+        <div class="install">
+          <span class="prompt">$</span>
+          <span>npm install @pablofdezruiz/whatsweb</span>
+        </div>
+        <p style="color: var(--fg-soft)">Requires Node ≥ 20 and an ESM project (<code>"type": "module"</code>).</p>
+        <pre><code><span class="tok-key">import</span> { createClient } <span class="tok-key">from</span> <span class="tok-str">'@pablofdezruiz/whatsweb'</span>;
+
+<span class="tok-key">const</span> wa = <span class="tok-fn">createClient</span>({ session: <span class="tok-str">'my-bot'</span> });
+
+wa.<span class="tok-fn">on</span>(<span class="tok-str">'ready'</span>, (me) => console.<span class="tok-fn">log</span>(<span class="tok-str">'Connected:'</span>, me.number));
+wa.<span class="tok-fn">command</span>(<span class="tok-str">'ping'</span>, (ctx) => ctx.<span class="tok-fn">reply</span>(<span class="tok-str">'pong 🏓'</span>));
+wa.<span class="tok-fn">hears</span>(<span class="tok-str">/hello/i</span>, (ctx) => ctx.<span class="tok-fn">react</span>(<span class="tok-str">'👋'</span>));
+
+<span class="tok-key">await</span> wa.<span class="tok-fn">start</span>(); <span class="tok-com">// scan the QR from WhatsApp → Linked devices</span></code></pre>
+      </section>
+
+      <section id="more">
+        <h2>Do more, with less code</h2>
+        <div class="split">
+          <div>
+            <h3 style="margin-top: 0">Send from any link (S3, CDNs)</h3>
+            <pre><code><span class="tok-com">// auto-detects image / video / audio / document</span>
+<span class="tok-key">await</span> wa.<span class="tok-fn">sendFromLink</span>(to,
+  <span class="tok-str">'https://bucket.s3.amazonaws.com/report.pdf'</span>);</code></pre>
+          </div>
+          <div>
+            <h3 style="margin-top: 0">Conversation flows</h3>
+            <pre><code>wa.<span class="tok-fn">command</span>(<span class="tok-str">'order'</span>, <span class="tok-key">async</span> (ctx) => {
+  <span class="tok-key">await</span> ctx.<span class="tok-fn">reply</span>(<span class="tok-str">'What would you like?'</span>);
+  <span class="tok-key">const</span> a = <span class="tok-key">await</span> ctx.<span class="tok-fn">awaitReply</span>();
+  <span class="tok-key">await</span> ctx.<span class="tok-fn">reply</span>(<span class="tok-str">`Got it: ${a.text}`</span>);
+});</code></pre>
+          </div>
+        </div>
+        <p style="text-align: center; margin-top: 28px">
+          <a class="btn btn-primary" href="./api/">Explore the full API →</a>
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p class="disclaimer">
+        WhatsApp does not offer a public API for unofficial clients. Automating user
+        accounts may violate their Terms of Service. Use at your own risk and only with
+        accounts you own. Not affiliated with WhatsApp or Meta.
+      </p>
+      <p>MIT © Pablo Fernández Ruiz · <a href="https://github.com/pablofdezr/whatsweb">GitHub</a> · <a href="./api/">API Docs</a></p>
+    </footer>
+  </body>
+</html>
