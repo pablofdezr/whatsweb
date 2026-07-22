@@ -1,7 +1,7 @@
 {
   "name": "@whatsweb/core",
-  "version": "0.1.0",
-  "description": "SDK con DX excelente para WhatsApp Web sin navegador (sin Puppeteer). Router de comandos + middleware, helpers de envío y emparejamiento por código, sobre el protocolo Multi-Device (Baileys 7).",
+  "version": "0.2.0",
+  "description": "A great-DX WhatsApp Web SDK for Node.js — no browser, no Puppeteer. Command router, media, groups, presence and per-user conversations, on the native Multi-Device protocol (Baileys 7).",
   "license": "MIT",
   "author": "Pablo Fernández Ruiz <pablofdezruiz@gmail.com>",
   "type": "module",
