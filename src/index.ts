@@ -25,8 +25,16 @@ export type { Handler, Middleware, MiddlewareNext, Trigger } from './router/type
 // --- Structures ---
 export { Message } from './structures/Message.js';
 export { Chat } from './structures/Chat.js';
+export { Conversation } from './structures/Conversation.js';
+export type { AskOptions, ChatMessage, ChatRole } from './structures/Conversation.js';
 export { Group } from './structures/Group.js';
+export { History } from './structures/History.js';
 export { Sender } from './structures/Sender.js';
+
+// --- Conversation state ---
+export { MemoryStore } from './state/StateStore.js';
+export type { StateStore } from './state/StateStore.js';
+export { ConversationState } from './state/ConversationState.js';
 
 // --- Auth ---
 export { LocalAuth } from './auth/LocalAuth.js';

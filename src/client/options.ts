@@ -1,5 +1,6 @@
 import type { PresenceData, WAMessageKey } from 'baileys';
 import type { AuthStrategy } from '../auth/AuthStrategy.js';
+import type { StateStore } from '../state/StateStore.js';
 import type { Qr } from '../qr/Qr.js';
 import type { Context } from '../router/Context.js';
 import type { Logger } from '../util/logger.js';
@@ -37,6 +38,16 @@ export interface ClientOptions {
   rateLimitMs?: number;
   /** Command prefix(es) for the router. Defaults to `['!', '/']`. */
   commandPrefix?: string | string[];
+  /**
+   * Per-chat conversation state store. Defaults to an in-memory store;
+   * implement `StateStore` to back it with Redis, a database, etc.
+   */
+  stateStore?: StateStore;
+  /**
+   * In-memory per-chat message history (used by `conversation.history()`).
+   * Defaults to `{ limit: 50, maxChats: 1000 }`. Set to `false` to disable.
+   */
+  history?: false | { limit?: number; maxChats?: number };
   /** Pino (or compatible) logger. Silent by default. */
   logger?: Logger;
 }

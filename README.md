@@ -36,7 +36,7 @@ await wa.start();
 - 💬 **Rich messages** — polls, mentions, stickers, contacts, edit / delete / forward.
 - 👥 **Groups** — metadata, participants, invite links, create / join / leave.
 - 👤 **Presence & profile** — presence, profile pictures, status, block list.
-- 🧭 **Conversation flows** — `awaitReply` for question→answer bots.
+- 🧭 **Per-user conversations** — persistent state, message history, `ask`, and a neutral `toMessages()` to plug in your own LLM/agent.
 - 🛟 **Resilient** — auto-reconnect with backoff and optional send rate-limiting.
 - 🆔 **LID-aware** — supports WhatsApp's anonymous identity system.
 - 🟦 **Typed** — written in TypeScript, ships `.d.ts`, ESM.
@@ -108,6 +108,8 @@ wa.use(async (ctx, next) => {
 | `ctx.typing()`                          | Show "typing…"; returns a function to stop it.     |
 | `ctx.downloadMedia()`                   | Download the message media as a `Buffer`.          |
 | `ctx.awaitReply({ timeoutMs? })`        | Await the next reply in this chat (same sender).   |
+| `ctx.conversation`                      | Rich per-user handle: state, history, `ask`, send. |
+| `ctx.replyWithTyping(text)`             | Show "typing…" briefly, then reply.                |
 | `ctx.group`                             | `Group` handle when the message is from a group.   |
 | `ctx.message`                           | The raw `Message` (`.raw` for the Baileys object). |
 
@@ -227,17 +229,73 @@ await wa.blockUser('34600112233');
 const blocked = await wa.getBlocklist();
 ```
 
-## Conversation flows
+## Conversations (per-user experiences)
 
-Ask a question and await the reply — great for wizards:
+`ctx.conversation` (or `wa.conversation(jid)`) is a rich, per-user handle: send +
+**persistent state** + **message history** + **ask**. It's how you build stateful,
+per-user chat experiences.
+
+### Ask &amp; await — wizards
 
 ```ts
-wa.command('order', async (ctx) => {
-  await ctx.reply('What would you like?');
-  const answer = await ctx.awaitReply({ timeoutMs: 30_000 }); // same chat + sender
-  await ctx.reply(`Got it: ${answer.text}`);
+wa.command('signup', async (ctx) => {
+  const convo = ctx.conversation;
+  const name = await convo.askText('What is your name?');
+  const email = await convo.askText('And your email?', { timeoutMs: 60_000 });
+  await convo.state.patch({ name, email });
+  await convo.text(`Thanks ${name}, you're all set ✅`);
 });
 ```
+
+### Per-user state
+
+State is scoped per chat and persisted through a pluggable store (in-memory by
+default; implement `StateStore` for Redis, a database, …).
+
+```ts
+wa.on('message', async (ctx) => {
+  const count = (await ctx.conversation.state.get<number>('count')) ?? 0;
+  await ctx.conversation.state.set('count', count + 1);
+  await ctx.reply(`That's message #${count + 1} from you`);
+});
+
+createClient({ stateStore: myRedisStore }); // bring your own store
+```
+
+### Message history
+
+The client keeps a bounded, in-memory history per chat (messages seen and sent).
+
+```ts
+const recent = ctx.conversation.history(); // Message[] (oldest first)
+```
+
+Tune or disable it: `createClient({ history: { limit: 50, maxChats: 1000 } })` or
+`createClient({ history: false })`.
+
+### Bring your own agent (LLM)
+
+whatsweb is **unopinionated about LLMs** — it doesn't wrap any model. It just
+turns the conversation into a transcript with `toMessages()`, which you feed to
+your own agent (e.g. the [Vercel AI SDK](https://sdk.vercel.ai)). You stay in
+full control of the model, tools and streaming.
+
+```ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+wa.on('message', async (ctx) => {
+  const { text } = await generateText({
+    model: openai('gpt-4o-mini'),
+    system: 'You are a helpful WhatsApp assistant. Keep replies short.',
+    messages: ctx.conversation.toMessages({ limit: 20 }),
+  });
+  await ctx.replyWithTyping(text); // shows "typing…" then replies
+});
+```
+
+`toMessages()` maps your messages to `assistant` turns and the other party's to
+`user` turns — the exact `{ role, content }` shape agent SDKs expect.
 
 ## Reconnection & rate limiting
 
@@ -322,13 +380,15 @@ await Promise.all(clients.map((wa) => wa.start()));
 
 **`createClient(options)`** — `session`, `authStrategy`, `pairingCode`,
 `autoReconnect`, `maxReconnectAttempts`, `reconnectDelayMs`, `rateLimitMs`,
-`printQRInTerminal`, `deviceName`, `markOnlineOnConnect`, `commandPrefix`, `logger`.
+`stateStore`, `history`, `printQRInTerminal`, `deviceName`, `markOnlineOnConnect`,
+`commandPrefix`, `logger`.
 
 **Client**
 
 - Lifecycle: `start` / `initialize` / `waitUntilReady` / `logout` / `destroy`.
 - Router: `use` / `command` / `hears`.
 - Async: `messages` / `stream` / `next` / `waitForMessage`.
+- Conversations: `conversation(id)` / `stateFor(id)` / `historyFor(id)` / `clearHistory(id?)`.
 - Send: `send` / `sendText` / `sendImage` / `sendVideo` / `sendAudio` / `sendVoice`
   / `sendDocument` / `sendLocation` / `sendFromLink` / `sendPoll` / `sendSticker` /
   `sendContact`.

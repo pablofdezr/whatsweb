@@ -204,6 +204,7 @@
           <div class="card"><div class="ico">👥</div><h3>Groups</h3><p>Metadata, participants, invite links, create / join / leave.</p></div>
           <div class="card"><div class="ico">👤</div><h3>Presence &amp; profile</h3><p>Presence, profile pictures, status and block list.</p></div>
           <div class="card"><div class="ico">🔢</div><h3>Multiple accounts</h3><p>Run many numbers in one process, each with its own session.</p></div>
+          <div class="card"><div class="ico">🧠</div><h3>Per-user conversations</h3><p>State, history and <code>ask</code>, plus a neutral <code>toMessages()</code> to plug in your own LLM/agent.</p></div>
           <div class="card"><div class="ico">🛟</div><h3>Resilient</h3><p>Auto-reconnect with backoff and optional send rate-limiting.</p></div>
         </div>
       </div>
@@ -381,13 +382,46 @@ await wa.blockUser('34600112233');
           </article>
 
           <article class="ex">
-            <h3>Conversation flows</h3>
-            <p class="desc">Ask a question and await the reply — perfect for wizards.</p>
+            <h3>Per-user state</h3>
+            <p class="desc">Remember context per user, persisted through a pluggable store (in-memory by default, or Redis/DB).</p>
             <div class="code"><script type="text/plain">
-wa.command('order', async (ctx) => {
-  await ctx.reply('What would you like?');
-  const answer = await ctx.awaitReply({ timeoutMs: 30_000 });
-  await ctx.reply(`Got it: ${answer.text}`);
+wa.on('message', async (ctx) => {
+  const state = ctx.conversation.state;
+  const count = (await state.get('count')) ?? 0;
+  await state.set('count', count + 1);
+  await ctx.reply(`That's message #${count + 1} from you`);
+});
+</script></div>
+          </article>
+
+          <article class="ex">
+            <h3>Wizard (ask &amp; save)</h3>
+            <p class="desc">Prompt the user, await their replies, and store the answers — a full signup flow.</p>
+            <div class="code"><script type="text/plain">
+wa.command('signup', async (ctx) => {
+  const convo = ctx.conversation;
+  const name = await convo.askText('What is your name?');
+  const email = await convo.askText('And your email?', { timeoutMs: 60_000 });
+  await convo.state.patch({ name, email });
+  await convo.text(`Thanks ${name}, you're all set ✅`);
+});
+</script></div>
+          </article>
+
+          <article class="ex">
+            <h3>Bring your own agent (LLM)</h3>
+            <p class="desc">whatsweb is unopinionated about LLMs — it hands you the transcript, you drive the model (here, the Vercel AI SDK).</p>
+            <div class="code"><script type="text/plain">
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+wa.on('message', async (ctx) => {
+  const { text } = await generateText({
+    model: openai('gpt-4o-mini'),
+    system: 'You are a helpful WhatsApp assistant. Keep replies short.',
+    messages: ctx.conversation.toMessages({ limit: 20 }),
+  });
+  await ctx.replyWithTyping(text);
 });
 </script></div>
           </article>

@@ -17,8 +17,12 @@ import { resolveMedia, type MediaSource } from '../media/resolve.js';
 import { Qr } from '../qr/Qr.js';
 import { Context } from '../router/Context.js';
 import type { Handler, Middleware, Trigger } from '../router/types.js';
+import { ConversationState } from '../state/ConversationState.js';
+import { MemoryStore, type StateStore } from '../state/StateStore.js';
 import { Chat } from '../structures/Chat.js';
+import { Conversation } from '../structures/Conversation.js';
 import { Group } from '../structures/Group.js';
+import { History } from '../structures/History.js';
 import { Message } from '../structures/Message.js';
 import { eventStream } from '../util/eventStream.js';
 import { ensureJid, jidToNumber } from '../util/jid.js';
@@ -72,6 +76,8 @@ export class Client extends EventEmitter {
   private reconnectTimer?: ReturnType<typeof setTimeout>;
   private manualClose = false;
   private readonly sendQueue?: RateLimitedQueue;
+  private readonly store: StateStore;
+  private readonly messageHistory?: History;
 
   /** Account information once connected. */
   public info?: ClientInfo;
@@ -96,6 +102,13 @@ export class Client extends EventEmitter {
     this.prefixes = Array.isArray(prefix) ? prefix : [prefix];
     if (options.rateLimitMs !== undefined) {
       this.sendQueue = new RateLimitedQueue(options.rateLimitMs);
+    }
+    this.store = options.stateStore ?? new MemoryStore();
+    if (options.history !== false) {
+      this.messageHistory = new History(
+        options.history?.limit ?? 50,
+        options.history?.maxChats ?? 1000,
+      );
     }
   }
 
@@ -298,6 +311,7 @@ export class Client extends EventEmitter {
     for (const raw of upsert.messages) {
       if (!raw.message) continue;
       const ctx = new Context(this, new Message(this, raw));
+      this.messageHistory?.add(ctx.message);
       this.emit('message_create', ctx);
       if (ctx.fromMe) continue;
       this.emit('message', ctx);
@@ -380,7 +394,9 @@ export class Client extends EventEmitter {
     const payload: AnyMessageContent = typeof content === 'string' ? { text: content } : content;
     const sent = await this.dispatch(jid, payload, options);
     if (!sent) throw new Error('WhatsApp did not return the sent message');
-    return new Message(this, sent);
+    const message = new Message(this, sent);
+    this.messageHistory?.add(message);
+    return message;
   }
 
   sendText(to: string, text: string, options: TextOptions = {}): Promise<Message> {
@@ -560,6 +576,29 @@ export class Client extends EventEmitter {
   /** Returns a fluent handle for a chat. */
   chat(id: string, name?: string): Chat {
     return new Chat(this, ensureJid(id), name);
+  }
+
+  /**
+   * Returns a rich per-user handle: send + persistent state + history + `ask`.
+   * `expectedSender` (used by `ctx.conversation`) scopes `ask` to a participant.
+   */
+  conversation(id: string, expectedSender?: string): Conversation {
+    return new Conversation(this, ensureJid(id), expectedSender);
+  }
+
+  /** The persistent state for a chat. */
+  stateFor(chatId: string): ConversationState {
+    return new ConversationState(this.store, ensureJid(chatId));
+  }
+
+  /** Recent in-memory message history for a chat. */
+  historyFor(chatId: string): Message[] {
+    return this.messageHistory?.get(ensureJid(chatId)) ?? [];
+  }
+
+  /** Clears message history for one chat, or all chats. */
+  clearHistory(chatId?: string): void {
+    this.messageHistory?.clear(chatId ? ensureJid(chatId) : undefined);
   }
 
   /** Is the number registered on WhatsApp? */

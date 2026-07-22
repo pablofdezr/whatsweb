@@ -34,6 +34,12 @@ Initial development. The first published release will be `0.1.0`.
   `getBlocklist`.
 - **Conversation flows**: `waitForMessage` and `ctx.awaitReply` for
   question→answer bots.
+- **Per-user conversations**: `ctx.conversation` / `client.conversation(jid)` with
+  persistent per-chat state (pluggable `StateStore`, in-memory by default),
+  bounded in-memory message history, `ask`/`askText`, and `ctx.replyWithTyping`.
+- **Bring your own agent**: `conversation.toMessages()` builds a neutral
+  `{ role, content }` transcript to feed your own LLM/agent (e.g. the Vercel AI
+  SDK). The SDK stays unopinionated about models.
 - **Robustness**: exponential-backoff reconnection with a max-attempts cap, and
   crash-safe error emission (routes to the logger when no `error` listener).
 - **Rate limiting**: optional `rateLimitMs` option that serializes and spaces

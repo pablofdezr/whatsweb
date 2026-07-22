@@ -24,7 +24,7 @@ import type { Message } from './Message.js';
  */
 export class Chat {
   constructor(
-    private readonly client: Client,
+    protected readonly client: Client,
     /** Chat JID. */
     public readonly id: string,
     /** Chat name, if known. */

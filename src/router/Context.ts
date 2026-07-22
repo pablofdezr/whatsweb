@@ -9,6 +9,7 @@ import type {
 } from '../client/send-options.js';
 import type { MediaSource } from '../media/resolve.js';
 import { Chat } from '../structures/Chat.js';
+import type { Conversation } from '../structures/Conversation.js';
 import type { Group } from '../structures/Group.js';
 import type { Message } from '../structures/Message.js';
 import type { Sender } from '../structures/Sender.js';
@@ -46,6 +47,14 @@ export class Context {
   /** Group handle if this message comes from a group, otherwise `undefined`. */
   get group(): Group | undefined {
     return this.isGroup ? this.client.group(this.chatId) : undefined;
+  }
+
+  /**
+   * Rich per-user handle for this chat: state, history, and `ask`. Scoped to the
+   * sender, so `ask`/`awaitReply` resolve for the same person even in groups.
+   */
+  get conversation(): Conversation {
+    return this.client.conversation(this.chatId, this.sender.id);
   }
 
   /** Identity of whoever sent the message (LID/PN-aware). */
@@ -96,6 +105,14 @@ export class Context {
   /** React to the message with an emoji (empty string to remove). */
   react(emoji: string): Promise<void> {
     return this.message.react(emoji);
+  }
+
+  /** Shows "typing…" for a moment, then replies — feels more human. */
+  async replyWithTyping(content: string, options: { delayMs?: number } = {}): Promise<Message> {
+    const stop = await this.typing();
+    await new Promise((resolve) => setTimeout(resolve, options.delayMs ?? 800));
+    await stop();
+    return this.reply(content);
   }
 
   replyWithImage(source: MediaSource, options: CaptionOptions = {}): Promise<Message> {
