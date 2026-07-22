@@ -1,5 +1,7 @@
 # whatsweb
 
+[![npm](https://img.shields.io/npm/v/@whatsweb/core.svg)](https://www.npmjs.com/package/@whatsweb/core)
+[![downloads](https://img.shields.io/npm/dm/@whatsweb/core.svg)](https://www.npmjs.com/package/@whatsweb/core)
 [![docs](https://img.shields.io/badge/docs-website-25D366.svg)](https://pablofdezr.github.io/whatsweb/)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
@@ -14,7 +16,7 @@ Chromium. It speaks the native Multi-Device protocol directly over a WebSocket
 fully-typed, bot-friendly API.
 
 ```ts
-import { createClient } from '@pablofdezruiz/whatsweb';
+import { createClient } from '@whatsweb/core';
 
 const wa = createClient({ session: 'my-bot' });
 
@@ -42,11 +44,11 @@ await wa.start();
 ## Install
 
 ```bash
-npm install @pablofdezruiz/whatsweb
+npm install @whatsweb/core
 # or
-pnpm add @pablofdezruiz/whatsweb
+pnpm add @whatsweb/core
 # or
-bun add @pablofdezruiz/whatsweb
+bun add @whatsweb/core
 ```
 
 Works with **npm, pnpm and Bun**. Requires **Node ≥ 20** (or Bun) and an **ESM**
@@ -292,7 +294,7 @@ you scan the QR only once. Use different `session` names for multiple accounts,
 or implement the `AuthStrategy` interface for a custom store (e.g. a database):
 
 ```ts
-import { createClient, LocalAuth } from '@pablofdezruiz/whatsweb';
+import { createClient, LocalAuth } from '@whatsweb/core';
 
 const wa = createClient({
   authStrategy: new LocalAuth({ clientId: 'account-1', dataPath: './sessions' }),

@@ -1,5 +1,5 @@
 {
-  "name": "@pablofdezruiz/whatsweb",
+  "name": "@whatsweb/core",
   "version": "0.1.0",
   "description": "SDK con DX excelente para WhatsApp Web sin navegador (sin Puppeteer). Router de comandos + middleware, helpers de envío y emparejamiento por código, sobre el protocolo Multi-Device (Baileys 7).",
   "license": "MIT",

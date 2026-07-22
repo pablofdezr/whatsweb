@@ -19,3 +19,6 @@ bun.lockb
 .whatsweb_auth/
 .wwebjs_auth/
 auth_info*/
+
+# npm auth (env-var reference; never commit)
+.npmrc

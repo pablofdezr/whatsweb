@@ -79,8 +79,7 @@ Docusaurus's heavy dependencies never touch the SDK package.
 
 ## Releasing
 
-1. Set `name` in `package.json` to your npm user/org scope (the unscoped
-   `whatsweb` is already taken on npm).
+1. The package is published as `@whatsweb/core` (the `@whatsweb` npm org).
 2. Update `CHANGELOG.md`.
 3. `npm login`, then create the `NPM_TOKEN` repo secret for CI.
 4. Bump the version and tag: `npm version <patch|minor|major>` then
