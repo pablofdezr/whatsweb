@@ -30,9 +30,10 @@
     "format:check": "prettier --check \"{src,examples,test}/**/*.ts\"",
     "docs": "typedoc",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "prepublishOnly": "npm run clean && npm run typecheck && npm run build",
+    "prepublishOnly": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.json",
     "example:bot": "tsx examples/ping-bot.ts",
     "example:async": "tsx examples/async-bot.ts",
+    "example:multi": "tsx examples/multi-account.ts",
     "example:send": "tsx examples/send-message.ts",
     "example:pair": "tsx examples/pair-with-code.ts"
   },

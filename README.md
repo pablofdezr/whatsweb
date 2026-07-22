@@ -43,10 +43,14 @@ await wa.start();
 
 ```bash
 npm install @pablofdezruiz/whatsweb
+# or
+pnpm add @pablofdezruiz/whatsweb
+# or
+bun add @pablofdezruiz/whatsweb
 ```
 
-Requires **Node ≥ 20** and an **ESM** project (`"type": "module"`), since
-Baileys 7 is ESM-only.
+Works with **npm, pnpm and Bun**. Requires **Node ≥ 20** (or Bun) and an **ESM**
+project (`"type": "module"`), since Baileys 7 is ESM-only.
 
 ## Linking your account
 
@@ -293,6 +297,23 @@ import { createClient, LocalAuth } from '@pablofdezruiz/whatsweb';
 const wa = createClient({
   authStrategy: new LocalAuth({ clientId: 'account-1', dataPath: './sessions' }),
 });
+```
+
+### Multiple accounts
+
+Run several numbers in one process — one `Client` per account with a distinct
+`session` (each gets its own credentials folder). See
+[`examples/multi-account.ts`](./examples/multi-account.ts).
+
+```ts
+const accounts = ['personal', 'work'];
+const clients = accounts.map((name) => createClient({ session: name }));
+
+for (const wa of clients) {
+  wa.on('ready', (me) => console.log('connected:', me.number));
+  wa.command('ping', (ctx) => ctx.reply('pong'));
+}
+await Promise.all(clients.map((wa) => wa.start()));
 ```
 
 ## API overview

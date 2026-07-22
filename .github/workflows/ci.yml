@@ -22,3 +22,25 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+
+  # Verify the project installs, builds and tests with pnpm and Bun too.
+  compat:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pm: [pnpm, bun]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+      - if: matrix.pm == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - if: matrix.pm == 'bun'
+        uses: oven-sh/setup-bun@v2
+      - run: ${{ matrix.pm }} install
+      - run: ${{ matrix.pm }} run build
+      - run: ${{ matrix.pm }} run test

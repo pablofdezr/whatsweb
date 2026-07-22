@@ -2,16 +2,21 @@
 
 ## Requirements
 
-- Node ≥ 20
-- npm
+- Node ≥ 20 (or Bun)
+- Any of npm, pnpm or Bun
 
 ## Setup
 
 ```bash
-npm install
+npm install     # or: pnpm install   /   bun install
 ```
 
+`package-lock.json` (npm) is the committed, canonical lockfile; pnpm/bun
+lockfiles are gitignored so the repo keeps a single source of truth.
+
 ## Scripts
+
+Run any script with your package manager (`npm run <x>`, `pnpm <x>`, `bun run <x>`):
 
 ```bash
 npm run build          # compile to dist/ (ESM + .d.ts)
@@ -23,8 +28,19 @@ npm run format:check   # Prettier --check
 npm run docs           # generate API docs (TypeDoc) into docs/
 npm run example:bot                    # demo bot, callback style (scan the QR)
 npm run example:async                  # same bot, async/await style
+npm run example:multi                  # manage multiple accounts
 npm run example:pair -- 34600112233    # pairing by code
 ```
+
+Bun can also run the TypeScript examples **directly**, no `tsx` needed:
+
+```bash
+bun examples/ping-bot.ts
+bun examples/multi-account.ts
+```
+
+> Bun prints two harmless `ws.WebSocket 'upgrade'/'unexpected-response' event is
+> not implemented` warnings; the connection still works.
 
 ## Project structure
 
@@ -46,7 +62,8 @@ the cryptography (Noise handshake, Signal, protobuf, media encryption).
 
 ## Continuous integration
 
-- **`ci.yml`** — lint, format check, typecheck, build and tests on Node 20 & 22.
+- **`ci.yml`** — lint, format check, typecheck, build and tests on Node 20 & 22,
+  plus a `compat` job that installs, builds and tests with **pnpm** and **Bun**.
 - **`publish.yml`** — publishes to npm on `v*` tags (needs an `NPM_TOKEN` repo
   secret).
 - **`docs.yml`** — builds the landing page (`web/index.html`) plus the TypeDoc
