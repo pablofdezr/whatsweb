@@ -143,7 +143,12 @@ export class Client extends EventEmitter {
       version,
       auth: state,
       logger: this.options.logger as never,
-      browser: Browsers.ubuntu(this.options.deviceName),
+      // Phone-number pairing rejects companion platforms whose browser name
+      // isn't a recognized browser (Chrome, Firefox, Safari, Edge, Opera), so
+      // a custom deviceName can only be used with the QR flow.
+      browser: this.options.pairingCode
+        ? Browsers.ubuntu('Chrome')
+        : Browsers.ubuntu(this.options.deviceName),
       markOnlineOnConnect: this.options.markOnlineOnConnect,
     });
 
