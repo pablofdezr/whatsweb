@@ -29,7 +29,9 @@ wa.hears(/hello/i, (ctx) => {
 wa.hears(/^\/strict\b/i, (ctx) => {
   const value = ctx.text.replace(/^\/strict\s*/i, '');
   const exact = /^hello$/i.test(value);
-  return ctx.reply(exact ? `✅ "${value}" is an exact hello` : `❌ "${value}" is not an exact hello`);
+  return ctx.reply(
+    exact ? `✅ "${value}" is an exact hello` : `❌ "${value}" is not an exact hello`,
+  );
 });
 
 // Log every incoming message so you can watch matches happen in the terminal.
