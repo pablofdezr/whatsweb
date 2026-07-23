@@ -5,6 +5,21 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-07-23
+
+### Fixed
+
+- **Pairing by phone number**: entering the pairing code on the phone failed
+  with "Couldn't link device". WhatsApp rejects companion registrations whose
+  browser name isn't a recognized browser, so the client now presents
+  `Chrome (Ubuntu)` during pairing-code login. The custom `deviceName` still
+  applies to the QR flow (a protocol limitation, not a whatsweb one).
+
+### Added
+
+- New `examples/ai-bot.ts`: an AI chatbot built with the Vercel AI SDK that
+  feeds `conversation.toMessages()` to Claude as chat context.
+
 ## [0.2.0] - 2026-07-22
 
 ### Added

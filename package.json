@@ -1,6 +1,6 @@
 {
   "name": "@whatsweb/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A great-DX WhatsApp Web SDK for Node.js — no browser, no Puppeteer. Command router, media, groups, presence and per-user conversations, on the native Multi-Device protocol (Baileys 7).",
   "license": "MIT",
   "author": "Pablo Fernández Ruiz <pablofdezruiz@gmail.com>",
