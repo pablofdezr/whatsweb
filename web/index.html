@@ -8,581 +8,1107 @@
       name="description"
       content="A great-DX, fully-typed SDK for WhatsApp Web with no browser. Command router, media helpers, groups, presence, multiple accounts and more, on the native Multi-Device protocol."
     />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%2325d366'/></svg>"
+    />
     <style>
       :root {
         --bg: #ffffff;
-        --bg-soft: #f6f8f7;
-        --fg: #0e1a14;
-        --fg-soft: #52605a;
-        --border: #e3e8e5;
-        --accent: #128c4b;
-        --accent-2: #25d366;
-        --code-bg: #0d1411;
-        --code-fg: #e7f3ec;
-        --radius: 14px;
-        --maxw: 1080px;
-        --k: #ff7b9c;
-        --s: #7ee2a8;
-        --c: #6b7d73;
-        --n: #f0b072;
+        --surface: #fafafa;
+        --fg: #0f0f0f;
+        --fg-soft: #6b6b6b;
+        --border: #e9e9e9;
+        --border-strong: #d6d6d6;
+        --accent: #0d7d47;
+        --brand: #25d366;
+        --on-solid: #ffffff;
+
+        --sx-key: #8250df;
+        --sx-str: #0a7d4f;
+        --sx-num: #0550ae;
+        --sx-com: #9b9b9b;
+
+        --maxw: 1040px;
+        --prose: 620px;
+        --r: 12px;
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #0b0f0d;
-          --bg-soft: #111815;
-          --fg: #e8efe9;
-          --fg-soft: #9fb0a6;
-          --border: #1e2823;
-          --accent: #34d17d;
-          --accent-2: #25d366;
-          --code-bg: #0c1210;
-          --code-fg: #e7f3ec;
+          --bg: #0a0a0a;
+          --surface: #111111;
+          --fg: #ededed;
+          --fg-soft: #8d8d8d;
+          --border: #1e1e1e;
+          --border-strong: #2f2f2f;
+          --accent: #3ecf8e;
+          --brand: #25d366;
+          --on-solid: #0a0a0a;
+
+          --sx-key: #d2a8ff;
+          --sx-str: #7ee787;
+          --sx-num: #79c0ff;
+          --sx-com: #6e7681;
         }
       }
-      * { box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        * {
+          transition-duration: 0.01ms !important;
+        }
+      }
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         color: var(--fg);
         background: var(--bg);
         line-height: 1.6;
+        font-size: 16px;
         -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-wrap: pretty;
       }
-      a { color: var(--accent); text-decoration: none; }
-      a:hover { text-decoration: underline; }
-      code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-      .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      p a {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        text-decoration-thickness: 1px;
+      }
+      h1,
+      h2,
+      h3 {
+        text-wrap: balance;
+        font-weight: 600;
+      }
+      code,
+      pre,
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+        font-variant-ligatures: none;
+      }
+      .wrap {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .prose {
+        max-width: var(--prose);
+      }
 
-      /* Header / nav */
-      header.nav {
-        position: sticky; top: 0; z-index: 20;
-        backdrop-filter: saturate(160%) blur(10px);
-        background: color-mix(in srgb, var(--bg) 82%, transparent);
+      /* ---------- Nav ---------- */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: color-mix(in srgb, var(--bg) 88%, transparent);
+        backdrop-filter: saturate(180%) blur(12px);
         border-bottom: 1px solid var(--border);
       }
-      .nav .wrap { display: flex; align-items: center; gap: 18px; height: 58px; }
-      .brand { font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
-      .nav nav { margin-left: auto; display: flex; gap: 18px; align-items: center; }
-      .nav nav a { color: var(--fg-soft); font-size: 0.92rem; font-weight: 500; }
-      .nav nav a:hover { color: var(--fg); text-decoration: none; }
-      .nav .gh {
-        border: 1px solid var(--border); padding: 6px 14px; border-radius: 999px; color: var(--fg);
+      .nav .wrap {
+        display: flex;
+        align-items: center;
+        height: 56px;
+        gap: 8px;
       }
-      @media (max-width: 640px) { .nav nav .hide-sm { display: none; } }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        font-size: 0.98rem;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--brand);
+      }
+      .nav ul {
+        margin: 0 0 0 auto;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .nav ul a {
+        display: inline-flex;
+        align-items: center;
+        height: 40px;
+        padding: 0 10px;
+        font-size: 0.88rem;
+        color: var(--fg-soft);
+        transition-property: color;
+        transition-duration: 150ms;
+      }
+      .nav ul a:hover {
+        color: var(--fg);
+      }
+      @media (max-width: 620px) {
+        .hide-sm {
+          display: none;
+        }
+      }
 
-      /* Hero */
-      .hero {
-        text-align: center; padding: 78px 20px 60px;
-        background: radial-gradient(1200px 380px at 50% -120px, rgba(37, 211, 102, 0.14), transparent 70%);
-        border-bottom: 1px solid var(--border);
-      }
-      .logo { font-size: 58px; line-height: 1; }
-      h1 { font-size: clamp(2.4rem, 6vw, 3.4rem); margin: 12px 0 6px; letter-spacing: -0.02em; }
-      .tagline { font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: var(--fg-soft); margin: 0 auto 8px; max-width: 640px; }
-      .sub { color: var(--fg-soft); max-width: 640px; margin: 0 auto; }
-      .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 22px 0 26px; }
-      .badge { font-size: 0.78rem; padding: 4px 10px; border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--border); color: var(--fg-soft); }
-      .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      /* ---------- Buttons ---------- */
       .btn {
-        display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 999px;
-        font-weight: 600; font-size: 0.98rem; border: 1px solid var(--border);
-        transition: transform 0.06s ease, background 0.15s ease; cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 0 18px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition-property: scale, background-color, border-color, color;
+        transition-duration: 150ms;
+        transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
       }
-      .btn:hover { text-decoration: none; transform: translateY(-1px); }
-      .btn-primary { background: var(--accent-2); color: #052012; border-color: transparent; }
-      .btn-ghost { background: var(--bg-soft); color: var(--fg); }
-
-      /* Sections */
-      section { padding: 60px 0; border-bottom: 1px solid var(--border); }
-      section > .wrap > h2 { font-size: 1.7rem; margin: 0 0 8px; letter-spacing: -0.01em; }
-      section > .wrap > .lead { color: var(--fg-soft); margin: 0 0 26px; max-width: 640px; }
-
-      /* Features */
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
-      .card { background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-      .card .ico { font-size: 1.5rem; }
-      .card h3 { margin: 10px 0 6px; font-size: 1.05rem; }
-      .card p { margin: 0; color: var(--fg-soft); font-size: 0.94rem; }
-      .card code { background: color-mix(in srgb, var(--fg) 8%, transparent); padding: 1px 5px; border-radius: 5px; font-size: 0.85em; }
-
-      /* Install tabs */
-      .tabs { max-width: 620px; }
-      .tab-btns { display: flex; gap: 6px; margin-bottom: 10px; }
-      .tab-btn {
-        font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-        padding: 7px 16px; border-radius: 999px; border: 1px solid var(--border);
-        background: var(--bg-soft); color: var(--fg-soft);
+      .btn:active {
+        scale: 0.96;
       }
-      .tab-btn.active { background: var(--accent-2); color: #052012; border-color: transparent; }
-      .tab-pane { display: none; }
-      .tab-pane.active { display: block; }
+      .btn-solid {
+        background: var(--fg);
+        color: var(--bg);
+      }
+      .btn-solid:hover {
+        background: color-mix(in srgb, var(--fg) 86%, var(--bg));
+      }
+      .btn-ghost {
+        border-color: var(--border-strong);
+        color: var(--fg);
+      }
+      .btn-ghost:hover {
+        background: var(--surface);
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        padding: 104px 0 72px;
+      }
+      .eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--fg-soft);
+        margin: 0 0 20px;
+      }
+      h1 {
+        font-size: clamp(2.1rem, 5.2vw, 3.15rem);
+        line-height: 1.1;
+        letter-spacing: -0.035em;
+        margin: 0 0 18px;
+      }
+      .lede {
+        font-size: 1.05rem;
+        color: var(--fg-soft);
+        margin: 0 0 32px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* ---------- Copyable command ---------- */
       .cmd {
-        display: flex; align-items: center; gap: 12px; background: var(--code-bg); color: var(--code-fg);
-        border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92rem; overflow-x: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+        padding: 0 6px 0 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+        font-size: 0.86rem;
+        color: var(--fg);
       }
-      .cmd .p { color: var(--accent-2); user-select: none; }
-      .req { color: var(--fg-soft); font-size: 0.92rem; margin-top: 14px; }
+      .cmd .p {
+        color: var(--accent);
+        user-select: none;
+      }
+      .cmd button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 28px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--fg-soft);
+        font: inherit;
+        font-size: 0.74rem;
+        cursor: pointer;
+        transition-property: color, background-color;
+        transition-duration: 150ms;
+      }
+      .cmd button:hover {
+        color: var(--fg);
+        background: color-mix(in srgb, var(--fg) 7%, transparent);
+      }
 
-      /* Code blocks */
-      .code { position: relative; margin: 0; }
+      /* ---------- Sections ---------- */
+      section {
+        padding: 64px 0;
+      }
+      .label {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--fg-soft);
+        margin: 0 0 14px;
+      }
+      h2 {
+        font-size: 1.5rem;
+        letter-spacing: -0.025em;
+        margin: 0 0 10px;
+      }
+      .sub {
+        color: var(--fg-soft);
+        margin: 0 0 32px;
+        font-size: 0.95rem;
+      }
+      .rule {
+        height: 1px;
+        background: var(--border);
+        border: 0;
+        margin: 0;
+      }
+
+      /* ---------- Features ---------- */
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 28px 40px;
+      }
+      .feature {
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+      }
+      .feature h3 {
+        margin: 0 0 5px;
+        font-size: 0.93rem;
+        letter-spacing: -0.01em;
+      }
+      .feature p {
+        margin: 0;
+        color: var(--fg-soft);
+        font-size: 0.88rem;
+        line-height: 1.55;
+      }
+      .feature code {
+        font-size: 0.85em;
+        color: var(--fg);
+      }
+
+      /* ---------- Tabs ---------- */
+      .tabs {
+        max-width: var(--prose);
+      }
+      .tablist {
+        display: flex;
+        gap: 22px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 18px;
+      }
+      .tab {
+        position: relative;
+        min-height: 40px;
+        padding: 0 0 10px;
+        border: 0;
+        background: none;
+        font: inherit;
+        font-size: 0.86rem;
+        color: var(--fg-soft);
+        cursor: pointer;
+        transition-property: color;
+        transition-duration: 150ms;
+      }
+      .tab::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 1px;
+        background: var(--fg);
+        opacity: 0;
+        transition-property: opacity;
+        transition-duration: 150ms;
+      }
+      .tab:hover {
+        color: var(--fg);
+      }
+      .tab[aria-selected='true'] {
+        color: var(--fg);
+      }
+      .tab[aria-selected='true']::after {
+        opacity: 1;
+      }
+      .pane[hidden] {
+        display: none;
+      }
+      .note {
+        color: var(--fg-soft);
+        font-size: 0.88rem;
+        margin: 18px 0 0;
+        max-width: var(--prose);
+      }
+      .note code {
+        font-size: 0.85em;
+        color: var(--fg);
+      }
+
+      /* ---------- Code ---------- */
+      .code {
+        position: relative;
+        margin: 0;
+      }
       .code pre {
-        background: var(--code-bg); color: var(--code-fg); border-radius: var(--radius);
-        padding: 18px 18px; overflow-x: auto; font-size: 0.86rem; line-height: 1.65;
-        border: 1px solid var(--border); margin: 0;
+        margin: 0;
+        padding: 18px 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        overflow-x: auto;
+        font-size: 0.83rem;
+        line-height: 1.7;
+        tab-size: 2;
       }
-      .code pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
       .code .copy {
-        position: absolute; top: 8px; right: 8px; font: inherit; font-size: 0.72rem; font-weight: 600;
-        padding: 4px 10px; border-radius: 8px; cursor: pointer; opacity: 0; transition: opacity 0.15s;
-        background: rgba(255, 255, 255, 0.1); color: var(--code-fg); border: 1px solid rgba(255, 255, 255, 0.18);
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        min-width: 40px;
+        min-height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--fg-soft);
+        font: inherit;
+        font-size: 0.72rem;
+        cursor: pointer;
+        opacity: 0;
+        transition-property: opacity, color, border-color;
+        transition-duration: 150ms;
       }
-      .code:hover .copy { opacity: 1; }
-      .k { color: var(--k); }
-      .s { color: var(--s); }
-      .c { color: var(--c); font-style: italic; }
-      .n { color: var(--n); }
+      .code:hover .copy,
+      .code .copy:focus-visible {
+        opacity: 1;
+      }
+      .code .copy:hover {
+        color: var(--fg);
+        border-color: var(--border-strong);
+      }
+      @media (hover: none) {
+        .code .copy {
+          opacity: 1;
+        }
+      }
+      .k {
+        color: var(--sx-key);
+      }
+      .s {
+        color: var(--sx-str);
+      }
+      .c {
+        color: var(--sx-com);
+      }
+      .n {
+        color: var(--sx-num);
+      }
 
-      /* Examples grid */
-      .examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 18px; align-items: start; }
-      @media (max-width: 900px) { .examples { grid-template-columns: 1fr; } }
-      .ex { background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
-      .ex h3 { margin: 0 0 4px; font-size: 1.06rem; }
-      .ex .desc { margin: 0 0 12px; color: var(--fg-soft); font-size: 0.9rem; }
+      /* ---------- Examples ---------- */
+      .examples {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      @media (min-width: 900px) {
+        .examples {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 44px 32px;
+        }
+      }
+      .ex h3 {
+        margin: 0 0 4px;
+        font-size: 0.93rem;
+        letter-spacing: -0.01em;
+      }
+      .ex .desc {
+        margin: 0 0 14px;
+        color: var(--fg-soft);
+        font-size: 0.87rem;
+        line-height: 1.55;
+      }
 
-      footer { padding: 34px 20px; text-align: center; color: var(--fg-soft); font-size: 0.88rem; }
-      .disclaimer { max-width: 700px; margin: 0 auto 12px; }
+      /* ---------- CTA + footer ---------- */
+      .cta-block {
+        padding: 72px 0 80px;
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 36px 0 48px;
+        color: var(--fg-soft);
+        font-size: 0.83rem;
+      }
+      footer .disclaimer {
+        max-width: 640px;
+        margin: 0 0 18px;
+        line-height: 1.6;
+      }
+      footer .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin: 0;
+      }
+      footer a:hover {
+        color: var(--fg);
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
     </style>
   </head>
   <body>
     <header class="nav">
       <div class="wrap">
-        <span class="brand">💬 whatsweb</span>
-        <nav>
-          <a class="hide-sm" href="#features">Features</a>
-          <a class="hide-sm" href="#install">Install</a>
-          <a href="#examples">Examples</a>
-          <a href="./docs/">Docs</a>
-          <a class="gh" href="https://github.com/pablofdezr/whatsweb">GitHub</a>
-        </nav>
+        <a class="brand" href="#top"><span class="dot"></span>whatsweb</a>
+        <ul>
+          <li><a class="hide-sm" href="#features">Features</a></li>
+          <li><a class="hide-sm" href="#install">Install</a></li>
+          <li><a href="#examples">Examples</a></li>
+          <li><a href="./docs/">Docs</a></li>
+          <li><a href="https://github.com/pablofdezr/whatsweb">GitHub</a></li>
+        </ul>
       </div>
     </header>
 
-    <section class="hero" style="border-bottom: none">
-      <div class="logo">💬</div>
-      <h1>whatsweb</h1>
-      <p class="tagline">A great-DX WhatsApp Web SDK with <strong>no browser</strong>.</p>
-      <p class="sub">
-        No Puppeteer, no headless Chromium. It speaks the native Multi-Device protocol directly over a
-        WebSocket, wrapped in a fully-typed, bot-friendly API.
-      </p>
-      <div class="badges">
-        <span class="badge">TypeScript · ESM</span>
-        <span class="badge">Node ≥ 20 · Bun</span>
-        <span class="badge">Built on Baileys 7</span>
-        <span class="badge">MIT</span>
-      </div>
-      <div class="cta">
-        <a class="btn btn-primary" href="#install">Get started</a>
-        <a class="btn btn-ghost" href="./docs/">📚 API Docs</a>
-        <a class="btn btn-ghost" href="https://github.com/pablofdezr/whatsweb">★ GitHub</a>
-      </div>
-    </section>
-
-    <section id="features">
-      <div class="wrap">
-        <h2>Features</h2>
-        <p class="lead">Everything you need to build WhatsApp bots and integrations, batteries included.</p>
-        <div class="grid">
-          <div class="card"><div class="ico">🚀</div><h3>No browser</h3><p>A fraction of the RAM and startup time of Puppeteer-based clients.</p></div>
-          <div class="card"><div class="ico">🤖</div><h3>Command router</h3><p><code>command</code>, <code>hears</code>, middleware and a rich <code>Context</code>.</p></div>
-          <div class="card"><div class="ico">🔀</div><h3>Two styles</h3><p>Event callbacks or a linear <code>for await</code> async iterator.</p></div>
-          <div class="card"><div class="ico">📎</div><h3>Media anywhere</h3><p>Path, http(s)/S3 URL, Buffer or stream — with auto type detection.</p></div>
-          <div class="card"><div class="ico">💬</div><h3>Rich messages</h3><p>Polls, mentions, stickers, contacts, edit / delete / forward.</p></div>
-          <div class="card"><div class="ico">👥</div><h3>Groups</h3><p>Metadata, participants, invite links, create / join / leave.</p></div>
-          <div class="card"><div class="ico">👤</div><h3>Presence &amp; profile</h3><p>Presence, profile pictures, status and block list.</p></div>
-          <div class="card"><div class="ico">🔢</div><h3>Multiple accounts</h3><p>Run many numbers in one process, each with its own session.</p></div>
-          <div class="card"><div class="ico">🧠</div><h3>Per-user conversations</h3><p>State, history and <code>ask</code>, plus a neutral <code>toMessages()</code> to plug in your own LLM/agent.</p></div>
-          <div class="card"><div class="ico">🛟</div><h3>Resilient</h3><p>Auto-reconnect with backoff and optional send rate-limiting.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="install">
-      <div class="wrap">
-        <h2>Install</h2>
-        <p class="lead">Works with npm, pnpm and Bun. Requires Node ≥ 20 (or Bun) and an ESM project.</p>
-        <div class="tabs" data-tabs>
-          <div class="tab-btns">
-            <button class="tab-btn active" data-tab="npm">npm</button>
-            <button class="tab-btn" data-tab="pnpm">pnpm</button>
-            <button class="tab-btn" data-tab="bun">bun</button>
+    <main id="top">
+      <section class="hero">
+        <div class="wrap">
+          <div class="prose">
+            <p class="eyebrow">TypeScript · ESM · MIT</p>
+            <h1>The WhatsApp Web SDK with no browser</h1>
+            <p class="lede">
+              No Puppeteer, no headless Chromium. whatsweb speaks the native Multi-Device protocol
+              directly over a WebSocket, wrapped in a fully-typed, bot-friendly API.
+            </p>
+            <div class="actions">
+              <a class="btn btn-solid" href="./docs/">Read the docs</a>
+              <span class="cmd mono"
+                ><span class="p">$</span> npm install @whatsweb/core
+                <button type="button" data-copy="npm install @whatsweb/core">Copy</button></span
+              >
+            </div>
           </div>
-          <div class="tab-pane active" data-pane="npm"><div class="cmd"><span class="p">$</span> npm install @whatsweb/core</div></div>
-          <div class="tab-pane" data-pane="pnpm"><div class="cmd"><span class="p">$</span> pnpm add @whatsweb/core</div></div>
-          <div class="tab-pane" data-pane="bun"><div class="cmd"><span class="p">$</span> bun add @whatsweb/core</div></div>
         </div>
-        <p class="req">
-          Add <code>"type": "module"</code> to your <code>package.json</code> — Baileys 7 (and this SDK) are
-          ESM-only. Bun can also run the TypeScript examples directly, no build step needed.
-        </p>
-      </div>
-    </section>
+      </section>
 
-    <section id="quickstart">
-      <div class="wrap">
-        <h2>Quick start</h2>
-        <p class="lead">A working bot in a handful of lines. Scan the QR once and you're live.</p>
-        <div class="code"><script type="text/plain">
-import { createClient } from '@whatsweb/core';
+      <section style="padding-top: 0">
+        <div class="wrap">
+          <div class="code" style="max-width: 780px">
+            <script type="text/plain">
+              import { createClient } from '@whatsweb/core';
 
-const wa = createClient({ session: 'my-bot' });
+              const wa = createClient({ session: 'my-bot' });
 
-wa.on('ready', (me) => console.log('Connected:', me.number));
-wa.command('ping', (ctx) => ctx.reply('pong 🏓'));
-wa.command('sum', (ctx) => ctx.reply(`= ${ctx.args.map(Number).reduce((a, b) => a + b, 0)}`));
-wa.hears(/hello/i, (ctx) => ctx.react('👋'));
+              wa.on('ready', (me) => console.log('Connected:', me.number));
+              wa.command('ping', (ctx) => ctx.reply('pong'));
+              wa.hears(/hello/i, (ctx) => ctx.react('👋'));
 
-await wa.start(); // scan the QR from WhatsApp → Linked devices
-</script></div>
-      </div>
-    </section>
-
-    <section id="examples">
-      <div class="wrap">
-        <h2>Examples</h2>
-        <p class="lead">Real snippets for the things you'll actually build. Hover a block to copy it.</p>
-        <div class="examples">
-
-          <article class="ex">
-            <h3>Multiple accounts</h3>
-            <p class="desc">Run several numbers in one process — one client per account, each with its own session folder.</p>
-            <div class="code"><script type="text/plain">
-const accounts = ['personal', 'work'];
-const clients = accounts.map((name) => createClient({ session: name }));
-
-for (const wa of clients) {
-  wa.on('ready', (me) => console.log('connected:', me.number));
-  wa.command('ping', (ctx) => ctx.reply('pong'));
-}
-
-await Promise.all(clients.map((wa) => wa.start()));
-
-// send from a specific account
-await clients[1].sendText('34600112233', 'Hello from work');
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Async / await style</h3>
-            <p class="desc">Prefer a linear flow? Iterate incoming messages instead of registering callbacks.</p>
-            <div class="code"><script type="text/plain">
-await wa.start();
-const me = await wa.waitUntilReady();
-
-for await (const ctx of wa.messages()) {
-  if (ctx.command === 'ping') await ctx.reply('pong');
-  else if (/hello/i.test(ctx.text)) await ctx.react('👋');
-}
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Pairing by code (no QR)</h3>
-            <p class="desc">Link an account with an 8-character code instead of scanning a QR.</p>
-            <div class="code"><script type="text/plain">
-const wa = createClient({ session: 'my-bot', pairingCode: '34600112233' });
-
-wa.on('pairing_code', (code) => console.log('Enter on your phone:', code));
-await wa.start();
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Send media</h3>
-            <p class="desc">Images, voice notes, documents and locations — sources can be a path, URL or Buffer.</p>
-            <div class="code"><script type="text/plain">
-await wa.sendImage('34600112233', './cat.jpg', { caption: 'meow' });
-await wa.sendVoice('34600112233', './note.ogg');
-await wa.sendDocument('34600112233', './invoice.pdf', { fileName: 'invoice.pdf' });
-await wa.sendLocation('34600112233', { latitude: 40.4168, longitude: -3.7038 });
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Send from a link (S3, CDNs)</h3>
-            <p class="desc">Point at any URL — the media kind (image/video/audio/document) is detected for you.</p>
-            <div class="code"><script type="text/plain">
-// auto-detects the media kind
-await wa.sendFromLink('34600112233', 'https://bucket.s3.amazonaws.com/report.pdf');
-await wa.sendFromLink('34600112233', 'https://cdn.example.com/clip.mp4', { caption: 'look' });
-
-// stream a private S3 object without buffering
-const obj = await s3.send(new GetObjectCommand({ Bucket, Key }));
-await wa.sendVideo('34600112233', { stream: obj.Body });
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Rich messages</h3>
-            <p class="desc">Mentions, polls, stickers and contact cards.</p>
-            <div class="code"><script type="text/plain">
-await wa.sendText(group, 'ping @34600112233', { mentions: ['34600112233'] });
-await wa.sendPoll('34600112233', { name: 'Pizza?', options: ['Yes', 'No'] });
-await wa.sendSticker('34600112233', './sticker.webp');
-await wa.sendContact('34600112233', { fullName: 'Ada Lovelace', phone: '34600112233' });
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Edit, delete, forward</h3>
-            <p class="desc">Manage messages after sending them.</p>
-            <div class="code"><script type="text/plain">
-const msg = await wa.sendText('34600112233', 'typo');
-await msg.edit('fixed');
-await msg.delete(); // delete for everyone
-
-wa.on('message', (ctx) => ctx.forward('34611111111'));
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Groups</h3>
-            <p class="desc">A fluent handle for every group operation.</p>
-            <div class="code"><script type="text/plain">
-const group = wa.group('120363...@g.us');
-
-await group.addParticipants(['34600112233']);
-await group.promote(['34600112233']);
-await group.setSubject('New name');
-console.log(await group.inviteLink()); // https://chat.whatsapp.com/...
-await group.leave();
-
-// create / join
-await wa.createGroup('My group', ['34600112233', '34611111111']);
-await wa.joinGroupViaLink('https://chat.whatsapp.com/AbCdEf...');
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Presence &amp; profile</h3>
-            <p class="desc">Set your presence and profile, read other people's, manage the block list.</p>
-            <div class="code"><script type="text/plain">
-await wa.setPresence('available');
-await wa.setName('My Bot');
-await wa.setStatus('Available 24/7');
-await wa.setProfilePicture('./avatar.jpg');
-
-const url = await wa.getProfilePictureUrl('34600112233', true);
-const about = await wa.getStatus('34600112233');
-await wa.blockUser('34600112233');
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Per-user state</h3>
-            <p class="desc">Remember context per user, persisted through a pluggable store (in-memory by default, or Redis/DB).</p>
-            <div class="code"><script type="text/plain">
-wa.on('message', async (ctx) => {
-  const state = ctx.conversation.state;
-  const count = (await state.get('count')) ?? 0;
-  await state.set('count', count + 1);
-  await ctx.reply(`That's message #${count + 1} from you`);
-});
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Wizard (ask &amp; save)</h3>
-            <p class="desc">Prompt the user, await their replies, and store the answers — a full signup flow.</p>
-            <div class="code"><script type="text/plain">
-wa.command('signup', async (ctx) => {
-  const convo = ctx.conversation;
-  const name = await convo.askText('What is your name?');
-  const email = await convo.askText('And your email?', { timeoutMs: 60_000 });
-  await convo.state.patch({ name, email });
-  await convo.text(`Thanks ${name}, you're all set ✅`);
-});
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Confirm a value</h3>
-            <p class="desc">Ask yes/no and get a boolean — accepted answers are configurable (defaults cover en/es + 👍/👎).</p>
-            <div class="code"><script type="text/plain">
-wa.command('email', async (ctx) => {
-  const convo = ctx.conversation;
-  const email = await convo.askText('What is your email?');
-  if (await convo.confirm(`Confirm your email is ${email}? (yes/no)`)) {
-    await convo.state.set('email', email);
-    await convo.text('Saved ✅');
-  }
-});
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Bring your own agent (LLM)</h3>
-            <p class="desc">whatsweb is unopinionated about LLMs — it hands you the transcript, you drive the model (here, the Vercel AI SDK).</p>
-            <div class="code"><script type="text/plain">
-import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
-
-wa.on('message', async (ctx) => {
-  const { text } = await generateText({
-    model: openai('gpt-4o-mini'),
-    system: 'You are a helpful WhatsApp assistant. Keep replies short.',
-    messages: ctx.conversation.toMessages({ limit: 20 }),
-  });
-  await ctx.replyWithTyping(text);
-});
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Download media</h3>
-            <p class="desc">Save incoming attachments to disk.</p>
-            <div class="code"><script type="text/plain">
-import { writeFile } from 'node:fs/promises';
-
-wa.on('message', async (ctx) => {
-  if (!ctx.message.hasMedia) return;
-  const buffer = await ctx.downloadMedia();
-  await writeFile(`./downloads/${ctx.message.id}`, buffer);
-  await ctx.react('💾');
-});
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Reconnection &amp; rate limiting</h3>
-            <p class="desc">Stay online with backoff, and space out sends to reduce ban risk.</p>
-            <div class="code"><script type="text/plain">
-const wa = createClient({
-  autoReconnect: true,      // default
-  maxReconnectAttempts: 10, // default: Infinity
-  reconnectDelayMs: 1000,   // base backoff, capped at 30s
-  rateLimitMs: 1000,        // >= 1s between outgoing messages
-});
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Middleware &amp; groups filter</h3>
-            <p class="desc">Compose behavior; in groups, only react to commands.</p>
-            <div class="code"><script type="text/plain">
-wa.use(async (ctx, next) => {
-  console.log(`${ctx.sender.displayName}: ${ctx.text}`);
-  if (ctx.isGroup && !ctx.command) return; // stop the chain
-  await next();
-});
-</script></div>
-          </article>
-
-          <article class="ex">
-            <h3>Events</h3>
-            <p class="desc">Every event is strongly typed.</p>
-            <div class="code"><script type="text/plain">
-wa.on('qr', (qr) => qr.printToTerminal());
-wa.on('ready', (info) => {});
-wa.on('message', (ctx) => {});
-wa.on('reaction', ({ emoji, key, fromMe }) => {});
-wa.on('presence', ({ id, presences }) => {});
-wa.on('disconnected', ({ code, reconnecting }) => {});
-wa.on('error', (err) => {});
-</script></div>
-          </article>
-
-        </div>
-      </div>
-    </section>
-
-    <section id="run">
-      <div class="wrap">
-        <h2>Run the examples</h2>
-        <p class="lead">Clone the repo and run any example with your package manager of choice.</p>
-        <div class="tabs" data-tabs>
-          <div class="tab-btns">
-            <button class="tab-btn active" data-tab="npm">npm</button>
-            <button class="tab-btn" data-tab="pnpm">pnpm</button>
-            <button class="tab-btn" data-tab="bun">bun</button>
+              await wa.start(); // scan the QR from WhatsApp → Linked devices
+            </script>
           </div>
-          <div class="tab-pane active" data-pane="npm"><div class="cmd"><span class="p">$</span> npm install && npm run example:multi</div></div>
-          <div class="tab-pane" data-pane="pnpm"><div class="cmd"><span class="p">$</span> pnpm install && pnpm example:multi</div></div>
-          <div class="tab-pane" data-pane="bun"><div class="cmd"><span class="p">$</span> bun install && bun examples/multi-account.ts</div></div>
         </div>
-        <p class="req">
-          Other examples: <code>example:bot</code>, <code>example:async</code>,
-          <code>example:pair</code>, <code>example:send</code>. Bun runs the
-          <code>examples/*.ts</code> files directly — no <code>tsx</code> needed.
-        </p>
-      </div>
-    </section>
+      </section>
 
-    <section id="docs-cta" style="text-align: center">
-      <div class="wrap">
-        <h2 style="border: none">Explore the full API</h2>
-        <p class="lead" style="margin: 0 auto 22px">
-          Every class, method, event and option — auto-generated from the source.
-        </p>
-        <a class="btn btn-primary" href="./docs/">Open the documentation →</a>
-      </div>
-    </section>
+      <section id="features">
+        <div class="wrap">
+          <p class="label">Features</p>
+          <h2>Batteries included</h2>
+          <p class="sub">Everything you need to build WhatsApp bots and integrations.</p>
+          <div class="features">
+            <div class="feature">
+              <h3>No browser</h3>
+              <p>A fraction of the RAM and startup time of Puppeteer-based clients.</p>
+            </div>
+            <div class="feature">
+              <h3>Command router</h3>
+              <p><code>command</code>, <code>hears</code>, middleware and a rich <code>Context</code>.</p>
+            </div>
+            <div class="feature">
+              <h3>Two styles</h3>
+              <p>Event callbacks or a linear <code>for await</code> async iterator.</p>
+            </div>
+            <div class="feature">
+              <h3>Media anywhere</h3>
+              <p>Path, http(s)/S3 URL, Buffer or stream — with auto type detection.</p>
+            </div>
+            <div class="feature">
+              <h3>Rich messages</h3>
+              <p>Polls, mentions, stickers, contacts, edit / delete / forward.</p>
+            </div>
+            <div class="feature">
+              <h3>Groups</h3>
+              <p>Metadata, participants, invite links, create / join / leave.</p>
+            </div>
+            <div class="feature">
+              <h3>Presence &amp; profile</h3>
+              <p>Presence, profile pictures, status and block list.</p>
+            </div>
+            <div class="feature">
+              <h3>Multiple accounts</h3>
+              <p>Run many numbers in one process, each with its own session.</p>
+            </div>
+            <div class="feature">
+              <h3>Per-user conversations</h3>
+              <p>
+                State, history and <code>ask</code>, plus a neutral <code>toMessages()</code> to plug
+                in your own LLM or agent.
+              </p>
+            </div>
+            <div class="feature">
+              <h3>Resilient</h3>
+              <p>Auto-reconnect with backoff and optional send rate-limiting.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="install">
+        <div class="wrap">
+          <p class="label">Install</p>
+          <h2>Add it to your project</h2>
+          <p class="sub">Works with npm, pnpm and Bun. Requires Node ≥ 20 (or Bun) and ESM.</p>
+          <div class="tabs" data-tabs>
+            <div class="tablist" role="tablist" aria-label="Package manager">
+              <button class="tab" role="tab" aria-selected="true" data-tab="npm">npm</button>
+              <button class="tab" role="tab" aria-selected="false" data-tab="pnpm">pnpm</button>
+              <button class="tab" role="tab" aria-selected="false" data-tab="bun">bun</button>
+            </div>
+            <div class="pane" data-pane="npm">
+              <span class="cmd mono"
+                ><span class="p">$</span> npm install @whatsweb/core
+                <button type="button" data-copy="npm install @whatsweb/core">Copy</button></span
+              >
+            </div>
+            <div class="pane" data-pane="pnpm" hidden>
+              <span class="cmd mono"
+                ><span class="p">$</span> pnpm add @whatsweb/core
+                <button type="button" data-copy="pnpm add @whatsweb/core">Copy</button></span
+              >
+            </div>
+            <div class="pane" data-pane="bun" hidden>
+              <span class="cmd mono"
+                ><span class="p">$</span> bun add @whatsweb/core
+                <button type="button" data-copy="bun add @whatsweb/core">Copy</button></span
+              >
+            </div>
+          </div>
+          <p class="note">
+            Add <code>"type": "module"</code> to your <code>package.json</code> — Baileys 7 (and this
+            SDK) are ESM-only. Bun can also run the TypeScript examples directly, no build step.
+          </p>
+        </div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="examples">
+        <div class="wrap">
+          <p class="label">Examples</p>
+          <h2>Real snippets</h2>
+          <p class="sub">For the things you'll actually build. Hover a block to copy it.</p>
+          <div class="examples">
+            <article class="ex">
+              <h3>Multiple accounts</h3>
+              <p class="desc">
+                Run several numbers in one process — one client per account, each with its own
+                session folder.
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  const accounts = ['personal', 'work'];
+                  const clients = accounts.map((name) => createClient({ session: name }));
+
+                  for (const wa of clients) {
+                    wa.on('ready', (me) => console.log('connected:', me.number));
+                    wa.command('ping', (ctx) => ctx.reply('pong'));
+                  }
+
+                  await Promise.all(clients.map((wa) => wa.start()));
+
+                  // send from a specific account
+                  await clients[1].sendText('34600112233', 'Hello from work');
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Async / await style</h3>
+              <p class="desc">
+                Prefer a linear flow? Iterate incoming messages instead of registering callbacks.
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  await wa.start();
+                  const me = await wa.waitUntilReady();
+
+                  for await (const ctx of wa.messages()) {
+                    if (ctx.command === 'ping') await ctx.reply('pong');
+                    else if (/hello/i.test(ctx.text)) await ctx.react('👋');
+                  }
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Pairing by code (no QR)</h3>
+              <p class="desc">Link an account with an 8-character code instead of scanning a QR.</p>
+              <div class="code">
+                <script type="text/plain">
+                  const wa = createClient({ session: 'my-bot', pairingCode: '34600112233' });
+
+                  wa.on('pairing_code', (code) => console.log('Enter on your phone:', code));
+                  await wa.start();
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Send media</h3>
+              <p class="desc">
+                Images, voice notes, documents and locations — sources can be a path, URL or Buffer.
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  await wa.sendImage('34600112233', './cat.jpg', { caption: 'meow' });
+                  await wa.sendVoice('34600112233', './note.ogg');
+                  await wa.sendDocument('34600112233', './invoice.pdf', { fileName: 'invoice.pdf' });
+                  await wa.sendLocation('34600112233', { latitude: 40.4168, longitude: -3.7038 });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Send from a link (S3, CDNs)</h3>
+              <p class="desc">
+                Point at any URL — the media kind (image/video/audio/document) is detected for you.
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  // auto-detects the media kind
+                  await wa.sendFromLink('34600112233', 'https://bucket.s3.amazonaws.com/report.pdf');
+                  await wa.sendFromLink('34600112233', 'https://cdn.example.com/clip.mp4', { caption: 'look' });
+
+                  // stream a private S3 object without buffering
+                  const obj = await s3.send(new GetObjectCommand({ Bucket, Key }));
+                  await wa.sendVideo('34600112233', { stream: obj.Body });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Rich messages</h3>
+              <p class="desc">Mentions, polls, stickers and contact cards.</p>
+              <div class="code">
+                <script type="text/plain">
+                  await wa.sendText(group, 'ping @34600112233', { mentions: ['34600112233'] });
+                  await wa.sendPoll('34600112233', { name: 'Pizza?', options: ['Yes', 'No'] });
+                  await wa.sendSticker('34600112233', './sticker.webp');
+                  await wa.sendContact('34600112233', { fullName: 'Ada Lovelace', phone: '34600112233' });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Edit, delete, forward</h3>
+              <p class="desc">Manage messages after sending them.</p>
+              <div class="code">
+                <script type="text/plain">
+                  const msg = await wa.sendText('34600112233', 'typo');
+                  await msg.edit('fixed');
+                  await msg.delete(); // delete for everyone
+
+                  wa.on('message', (ctx) => ctx.forward('34611111111'));
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Groups</h3>
+              <p class="desc">A fluent handle for every group operation.</p>
+              <div class="code">
+                <script type="text/plain">
+                  const group = wa.group('120363...@g.us');
+
+                  await group.addParticipants(['34600112233']);
+                  await group.promote(['34600112233']);
+                  await group.setSubject('New name');
+                  console.log(await group.inviteLink()); // https://chat.whatsapp.com/...
+                  await group.leave();
+
+                  // create / join
+                  await wa.createGroup('My group', ['34600112233', '34611111111']);
+                  await wa.joinGroupViaLink('https://chat.whatsapp.com/AbCdEf...');
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Presence &amp; profile</h3>
+              <p class="desc">
+                Set your presence and profile, read other people's, manage the block list.
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  await wa.setPresence('available');
+                  await wa.setName('My Bot');
+                  await wa.setStatus('Available 24/7');
+                  await wa.setProfilePicture('./avatar.jpg');
+
+                  const url = await wa.getProfilePictureUrl('34600112233', true);
+                  const about = await wa.getStatus('34600112233');
+                  await wa.blockUser('34600112233');
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Per-user state</h3>
+              <p class="desc">
+                Remember context per user, persisted through a pluggable store (in-memory by
+                default, or Redis/DB).
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  wa.on('message', async (ctx) => {
+                    const state = ctx.conversation.state;
+                    const count = (await state.get('count')) ?? 0;
+                    await state.set('count', count + 1);
+                    await ctx.reply(`That's message #${count + 1} from you`);
+                  });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Wizard (ask &amp; save)</h3>
+              <p class="desc">
+                Prompt the user, await their replies, and store the answers — a full signup flow.
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  wa.command('signup', async (ctx) => {
+                    const convo = ctx.conversation;
+                    const name = await convo.askText('What is your name?');
+                    const email = await convo.askText('And your email?', { timeoutMs: 60_000 });
+                    await convo.state.patch({ name, email });
+                    await convo.text(`Thanks ${name}, you're all set`);
+                  });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Confirm a value</h3>
+              <p class="desc">
+                Ask yes/no and get a boolean — accepted answers are configurable (defaults cover
+                en/es plus 👍/👎).
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  wa.command('email', async (ctx) => {
+                    const convo = ctx.conversation;
+                    const email = await convo.askText('What is your email?');
+                    if (await convo.confirm(`Confirm your email is ${email}? (yes/no)`)) {
+                      await convo.state.set('email', email);
+                      await convo.text('Saved');
+                    }
+                  });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Bring your own agent (LLM)</h3>
+              <p class="desc">
+                whatsweb is unopinionated about LLMs — it hands you the transcript, you drive the
+                model (here, the Vercel AI SDK).
+              </p>
+              <div class="code">
+                <script type="text/plain">
+                  import { generateText } from 'ai';
+                  import { openai } from '@ai-sdk/openai';
+
+                  wa.on('message', async (ctx) => {
+                    const { text } = await generateText({
+                      model: openai('gpt-4o-mini'),
+                      system: 'You are a helpful WhatsApp assistant. Keep replies short.',
+                      messages: ctx.conversation.toMessages({ limit: 20 }),
+                    });
+                    await ctx.replyWithTyping(text);
+                  });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Download media</h3>
+              <p class="desc">Save incoming attachments to disk.</p>
+              <div class="code">
+                <script type="text/plain">
+                  import { writeFile } from 'node:fs/promises';
+
+                  wa.on('message', async (ctx) => {
+                    if (!ctx.message.hasMedia) return;
+                    const buffer = await ctx.downloadMedia();
+                    await writeFile(`./downloads/${ctx.message.id}`, buffer);
+                    await ctx.react('💾');
+                  });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Reconnection &amp; rate limiting</h3>
+              <p class="desc">Stay online with backoff, and space out sends to reduce ban risk.</p>
+              <div class="code">
+                <script type="text/plain">
+                  const wa = createClient({
+                    autoReconnect: true,      // default
+                    maxReconnectAttempts: 10, // default: Infinity
+                    reconnectDelayMs: 1000,   // base backoff, capped at 30s
+                    rateLimitMs: 1000,        // >= 1s between outgoing messages
+                  });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Middleware &amp; groups filter</h3>
+              <p class="desc">Compose behavior; in groups, only react to commands.</p>
+              <div class="code">
+                <script type="text/plain">
+                  wa.use(async (ctx, next) => {
+                    console.log(`${ctx.sender.displayName}: ${ctx.text}`);
+                    if (ctx.isGroup && !ctx.command) return; // stop the chain
+                    await next();
+                  });
+                </script>
+              </div>
+            </article>
+
+            <article class="ex">
+              <h3>Events</h3>
+              <p class="desc">Every event is strongly typed.</p>
+              <div class="code">
+                <script type="text/plain">
+                  wa.on('qr', (qr) => qr.printToTerminal());
+                  wa.on('ready', (info) => {});
+                  wa.on('message', (ctx) => {});
+                  wa.on('reaction', ({ emoji, key, fromMe }) => {});
+                  wa.on('presence', ({ id, presences }) => {});
+                  wa.on('disconnected', ({ code, reconnecting }) => {});
+                  wa.on('error', (err) => {});
+                </script>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <hr class="rule" />
+
+      <section id="run">
+        <div class="wrap">
+          <p class="label">Run locally</p>
+          <h2>Try the examples</h2>
+          <p class="sub">Clone the repo and run any example with your package manager of choice.</p>
+          <div class="tabs" data-tabs>
+            <div class="tablist" role="tablist" aria-label="Package manager">
+              <button class="tab" role="tab" aria-selected="true" data-tab="npm">npm</button>
+              <button class="tab" role="tab" aria-selected="false" data-tab="pnpm">pnpm</button>
+              <button class="tab" role="tab" aria-selected="false" data-tab="bun">bun</button>
+            </div>
+            <div class="pane" data-pane="npm">
+              <span class="cmd mono"
+                ><span class="p">$</span> npm install &amp;&amp; npm run example:multi
+                <button type="button" data-copy="npm install && npm run example:multi">
+                  Copy
+                </button></span
+              >
+            </div>
+            <div class="pane" data-pane="pnpm" hidden>
+              <span class="cmd mono"
+                ><span class="p">$</span> pnpm install &amp;&amp; pnpm example:multi
+                <button type="button" data-copy="pnpm install && pnpm example:multi">
+                  Copy
+                </button></span
+              >
+            </div>
+            <div class="pane" data-pane="bun" hidden>
+              <span class="cmd mono"
+                ><span class="p">$</span> bun install &amp;&amp; bun examples/multi-account.ts
+                <button type="button" data-copy="bun install && bun examples/multi-account.ts">
+                  Copy
+                </button></span
+              >
+            </div>
+          </div>
+          <p class="note">
+            Other examples: <code>example:bot</code>, <code>example:async</code>,
+            <code>example:pair</code>, <code>example:send</code>. Bun runs the
+            <code>examples/*.ts</code> files directly — no <code>tsx</code> needed.
+          </p>
+        </div>
+      </section>
+
+      <hr class="rule" />
+
+      <section class="cta-block">
+        <div class="wrap">
+          <div class="prose">
+            <h2>Explore the full API</h2>
+            <p class="sub">
+              Every class, method, event and option — auto-generated from the source.
+            </p>
+            <a class="btn btn-solid" href="./docs/">Open the documentation</a>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <footer>
-      <p class="disclaimer">
-        WhatsApp does not offer a public API for unofficial clients. Automating user accounts may violate
-        their Terms of Service. Use at your own risk and only with accounts you own. Not affiliated with
-        WhatsApp or Meta.
-      </p>
-      <p>MIT © Pablo Fernández Ruiz · <a href="https://github.com/pablofdezr/whatsweb">GitHub</a> · <a href="./docs/">Docs</a></p>
+      <div class="wrap">
+        <p class="disclaimer">
+          WhatsApp does not offer a public API for unofficial clients. Automating user accounts may
+          violate their Terms of Service. Use at your own risk and only with accounts you own. Not
+          affiliated with WhatsApp or Meta.
+        </p>
+        <p class="meta">
+          <span>MIT © Pablo Fernández Ruiz</span>
+          <a href="https://github.com/pablofdezr/whatsweb">GitHub</a>
+          <a href="https://www.npmjs.com/package/@whatsweb/core">npm</a>
+          <a href="./docs/">Docs</a>
+        </p>
+      </div>
     </footer>
 
     <script>
       // Minimal, dependency-free TypeScript syntax highlighter.
       (function () {
-        var KW = /\b(const|let|var|function|return|await|async|for|of|in|if|else|import|from|export|default|new|class|extends|implements|type|interface|true|false|null|undefined|void|typeof|as)\b/g;
-        var RE = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(`(?:[^`\\]|\\.)*`|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/g;
-        function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        var KW =
+          /\b(const|let|var|function|return|await|async|for|of|in|if|else|import|from|export|default|new|class|extends|implements|type|interface|true|false|null|undefined|void|typeof|as)\b/g;
+        var RE =
+          /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(`(?:[^`\\]|\\.)*`|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/g;
+
+        function esc(s) {
+          return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
         function plain(t) {
           return esc(t)
             .replace(KW, '<span class="k">$1</span>')
             .replace(/\b(\d[\d_]*)\b/g, '<span class="n">$1</span>');
         }
         function hl(code) {
-          var out = '', last = 0, m;
+          var out = '',
+            last = 0,
+            m;
           RE.lastIndex = 0;
           while ((m = RE.exec(code))) {
             out += plain(code.slice(last, m.index));
-            out += m[1] ? '<span class="c">' + esc(m[1]) + '</span>' : '<span class="s">' + esc(m[2]) + '</span>';
+            out += m[1]
+              ? '<span class="c">' + esc(m[1]) + '</span>'
+              : '<span class="s">' + esc(m[2]) + '</span>';
             last = RE.lastIndex;
           }
           return out + plain(code.slice(last));
         }
+        // The snippets are indented to match the surrounding HTML; strip that
+        // common leading whitespace so the rendered code starts at column 0.
+        function dedent(raw) {
+          var lines = raw.replace(/^\n+/, '').replace(/\s+$/, '').split('\n');
+          var pad = Infinity;
+          lines.forEach(function (l) {
+            if (!l.trim()) return;
+            pad = Math.min(pad, l.match(/^[ \t]*/)[0].length);
+          });
+          if (!isFinite(pad)) pad = 0;
+          return lines
+            .map(function (l) {
+              return l.slice(pad);
+            })
+            .join('\n');
+        }
+
+        function copyTo(button, text) {
+          navigator.clipboard.writeText(text).then(function () {
+            var prev = button.textContent;
+            button.textContent = 'Copied';
+            setTimeout(function () {
+              button.textContent = prev;
+            }, 1200);
+          });
+        }
+
         document.querySelectorAll('.code').forEach(function (el) {
           var src = el.querySelector('script');
           if (!src) return;
-          var raw = src.textContent.replace(/^\n+/, '').replace(/\s+$/, '');
+          var raw = dedent(src.textContent);
           el.innerHTML =
-            '<button class="copy" type="button" aria-label="Copy">Copy</button><pre><code>' + hl(raw) + '</code></pre>';
+            '<button class="copy" type="button" aria-label="Copy code">Copy</button><pre><code>' +
+            hl(raw) +
+            '</code></pre>';
           el.querySelector('.copy').addEventListener('click', function (e) {
-            navigator.clipboard.writeText(raw).then(function () {
-              e.target.textContent = 'Copied';
-              setTimeout(function () { e.target.textContent = 'Copy'; }, 1200);
-            });
+            copyTo(e.currentTarget, raw);
           });
         });
 
-        // Install / run tabs
+        document.querySelectorAll('[data-copy]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            copyTo(b, b.getAttribute('data-copy'));
+          });
+        });
+
         document.querySelectorAll('[data-tabs]').forEach(function (t) {
-          t.querySelectorAll('.tab-btn').forEach(function (b) {
+          t.querySelectorAll('.tab').forEach(function (b) {
             b.addEventListener('click', function () {
-              t.querySelectorAll('.tab-btn').forEach(function (x) { x.classList.toggle('active', x === b); });
               var name = b.getAttribute('data-tab');
-              t.querySelectorAll('.tab-pane').forEach(function (p) {
-                p.classList.toggle('active', p.getAttribute('data-pane') === name);
+              t.querySelectorAll('.tab').forEach(function (x) {
+                x.setAttribute('aria-selected', String(x === b));
+              });
+              t.querySelectorAll('.pane').forEach(function (p) {
+                p.hidden = p.getAttribute('data-pane') !== name;
               });
             });
           });

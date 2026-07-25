@@ -1,27 +1,90 @@
 /**
  * whatsweb documentation theme.
- * Primary color set to a WhatsApp green.
+ *
+ * Mirrors the landing page (web/index.html): a neutral, low-chrome surface with
+ * a single green accent reserved for links and interactive state.
  */
 
 :root {
-  --ifm-color-primary: #128c4b;
-  --ifm-color-primary-dark: #107e44;
-  --ifm-color-primary-darker: #0f7740;
-  --ifm-color-primary-darkest: #0c6235;
-  --ifm-color-primary-light: #14a055;
-  --ifm-color-primary-lighter: #15a75a;
-  --ifm-color-primary-lightest: #18bd65;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-color-primary: #0d7d47;
+  --ifm-color-primary-dark: #0b6f3f;
+  --ifm-color-primary-darker: #0a693c;
+  --ifm-color-primary-darkest: #085631;
+  --ifm-color-primary-light: #0f8b4f;
+  --ifm-color-primary-lighter: #109252;
+  --ifm-color-primary-lightest: #13a55e;
+
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #fafafa;
+  --ifm-font-color-base: #0f0f0f;
+  --ifm-color-emphasis-300: #e9e9e9;
+  --ifm-toc-border-color: #e9e9e9;
+  --ifm-code-background: #fafafa;
+
+  --ifm-code-font-size: 92%;
+  --ifm-global-radius: 10px;
+  --ifm-navbar-shadow: none;
+  --ifm-heading-font-weight: 600;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #25d366;
-  --ifm-color-primary-dark: #1fc25c;
-  --ifm-color-primary-darker: #1db757;
-  --ifm-color-primary-darkest: #189748;
-  --ifm-color-primary-light: #3bd775;
-  --ifm-color-primary-lighter: #47d97d;
-  --ifm-color-primary-lightest: #6ee096;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-color-primary: #3ecf8e;
+  --ifm-color-primary-dark: #2ac37f;
+  --ifm-color-primary-darker: #26b878;
+  --ifm-color-primary-darkest: #1f9763;
+  --ifm-color-primary-light: #59d79c;
+  --ifm-color-primary-lighter: #67dba4;
+  --ifm-color-primary-lightest: #8ae4ba;
+
+  --ifm-background-color: #0a0a0a;
+  --ifm-background-surface-color: #111111;
+  --ifm-font-color-base: #ededed;
+  --ifm-color-emphasis-300: #1e1e1e;
+  --ifm-toc-border-color: #1e1e1e;
+  --ifm-code-background: #111111;
+
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.07);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hairline instead of a drop shadow, matching the landing nav. */
+.navbar {
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.navbar__title {
+  letter-spacing: -0.02em;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.markdown > p,
+.markdown > ul li {
+  text-wrap: pretty;
+}
+
+/* Quieter code surfaces: a single hairline, no heavy fill. */
+code {
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+.theme-code-block {
+  box-shadow: none !important;
+  border: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.footer {
+  --ifm-footer-background-color: var(--ifm-background-color);
+  --ifm-footer-color: var(--ifm-font-color-base);
+  border-top: 1px solid var(--ifm-color-emphasis-300);
 }

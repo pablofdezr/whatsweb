@@ -74,12 +74,12 @@ const config: Config = {
       ],
     },
     footer: {
-      style: 'dark',
+      style: 'light',
       copyright: 'MIT © Pablo Fernández Ruiz',
     },
     prism: {
       theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
+      darkTheme: prismThemes.oneDark,
     },
     colorMode: {
       respectPrefersColorScheme: true,
