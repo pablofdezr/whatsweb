@@ -10,7 +10,7 @@
 
 📖 **[Landing page](https://pablofdezr.github.io/whatsweb/)** · **[API documentation](https://pablofdezr.github.io/whatsweb/docs/)**
 
-A great-DX SDK for WhatsApp Web with **no browser** — no Puppeteer, no headless
+A great-DX SDK for WhatsApp Web with **no browser**: no Puppeteer, no headless
 Chromium. It speaks the native Multi-Device protocol directly over a WebSocket
 ([Baileys 7](https://github.com/WhiskeySockets/Baileys)) and wraps it in a
 fully-typed, bot-friendly API.
@@ -29,17 +29,17 @@ await wa.start();
 
 ## Features
 
-- 🚀 **No browser** — a fraction of the RAM and startup time of Puppeteer-based clients.
-- 🤖 **Command router** — `command`, `hears`, middleware, and a rich `Context`.
-- 🔀 **Two styles** — event callbacks *or* a linear `for await` async iterator.
-- 📎 **Media from anywhere** — local path, http(s)/S3 URL, Buffer or Node stream, with `sendFromLink` auto-detecting the type.
-- 💬 **Rich messages** — polls, mentions, stickers, contacts, edit / delete / forward.
-- 👥 **Groups** — metadata, participants, invite links, create / join / leave.
-- 👤 **Presence & profile** — presence, profile pictures, status, block list.
-- 🧭 **Per-user conversations** — persistent state, message history, `ask`, and a neutral `toMessages()` to plug in your own LLM/agent.
-- 🛟 **Resilient** — auto-reconnect with backoff and optional send rate-limiting.
-- 🆔 **LID-aware** — supports WhatsApp's anonymous identity system.
-- 🟦 **Typed** — written in TypeScript, ships `.d.ts`, ESM.
+- 🚀 **No browser**: a fraction of the RAM and startup time of Puppeteer-based clients.
+- 🤖 **Command router**: `command`, `hears`, middleware, and a rich `Context`.
+- 🔀 **Two styles**: event callbacks *or* a linear `for await` async iterator.
+- 📎 **Media from anywhere**: local path, http(s)/S3 URL, Buffer or Node stream, with `sendFromLink` auto-detecting the type.
+- 💬 **Rich messages**: polls, mentions, stickers, contacts, edit / delete / forward.
+- 👥 **Groups**: metadata, participants, invite links, create / join / leave.
+- 👤 **Presence & profile**: presence, profile pictures, status, block list.
+- 🧭 **Per-user conversations**: persistent state, message history, `ask`, and a neutral `toMessages()` to plug in your own LLM/agent.
+- 🛟 **Resilient**: auto-reconnect with backoff and optional send rate-limiting.
+- 🆔 **LID-aware**: supports WhatsApp's anonymous identity system.
+- 🟦 **Typed**: written in TypeScript, ships `.d.ts`, ESM.
 
 ## Install
 
@@ -56,7 +56,7 @@ project (`"type": "module"`), since Baileys 7 is ESM-only.
 
 ## Linking your account
 
-**By QR** (default): the QR is printed to the terminal — scan it from
+**By QR** (default): the QR is printed to the terminal. Scan it from
 *WhatsApp → Linked devices*.
 
 ```ts
@@ -80,7 +80,7 @@ await wa.start();
 wa.command('ping', (ctx) => ctx.reply('pong'));
 wa.command(['echo', 'say'], (ctx) => ctx.reply(ctx.args.join(' ')));
 
-// Text patterns — RegExp captures land in ctx.match
+// Text patterns: RegExp captures land in ctx.match
 wa.hears('thanks', (ctx) => ctx.react('🙏'));
 wa.hears(/price (\d+)/i, (ctx) => ctx.reply(`That costs ${ctx.match![1]}€`));
 
@@ -131,7 +131,7 @@ for await (const ctx of wa.messages()) {
 
 Messages are buffered between iterations, so none are lost. Also: `wa.stream(event)`
 (iterate any event), `wa.next(event)` (await a single event), and an optional
-`AbortSignal` to stop. Both styles are interchangeable — use whichever fits.
+`AbortSignal` to stop. Both styles are interchangeable, so use whichever fits.
 
 ## Sending messages
 
@@ -146,7 +146,7 @@ await wa.sendVoice('34600112233', './note.ogg');                 // voice note
 await wa.sendDocument('34600112233', './invoice.pdf', { fileName: 'invoice.pdf' });
 await wa.sendLocation('34600112233', { latitude: 40.4168, longitude: -3.7038 });
 
-// Fluent chat handle — set the recipient once
+// Fluent chat handle: set the recipient once
 const chat = wa.chat('34600112233');
 await chat.text('first');
 await chat.image('./photo.jpg');
@@ -164,7 +164,7 @@ await wa.sendFromLink('34600112233', signedUrl, { type: 'image' }); // force the
 ```
 
 A remote URL is fetched by **your** Node process (not by WhatsApp), then encrypted
-and uploaded — so it must be reachable from your server. For a private S3 bucket,
+and uploaded, so it must be reachable from your server. For a private S3 bucket,
 pass a presigned URL or stream the object directly:
 
 ```ts
@@ -235,7 +235,7 @@ const blocked = await wa.getBlocklist();
 **persistent state** + **message history** + **ask**. It's how you build stateful,
 per-user chat experiences.
 
-### Ask &amp; await — wizards
+### Ask &amp; await: wizards
 
 ```ts
 wa.command('signup', async (ctx) => {
@@ -261,7 +261,7 @@ wa.command('email', async (ctx) => {
     await convo.state.set('email', email);
     await convo.text('Saved ✅');
   } else {
-    await convo.text('No problem — send me the correct one.');
+    await convo.text('No problem, send me the correct one.');
   }
 });
 ```
@@ -294,7 +294,7 @@ Tune or disable it: `createClient({ history: { limit: 50, maxChats: 1000 } })` o
 
 ### Bring your own agent (LLM)
 
-whatsweb is **unopinionated about LLMs** — it doesn't wrap any model. It just
+whatsweb is **unopinionated about LLMs**: it doesn't wrap any model. It just
 turns the conversation into a transcript with `toMessages()`, which you feed to
 your own agent (e.g. the [Vercel AI SDK](https://sdk.vercel.ai)). You stay in
 full control of the model, tools and streaming.
@@ -314,7 +314,7 @@ wa.on('message', async (ctx) => {
 ```
 
 `toMessages()` maps your messages to `assistant` turns and the other party's to
-`user` turns — the exact `{ role, content }` shape agent SDKs expect.
+`user` turns, the exact `{ role, content }` shape agent SDKs expect.
 
 ## Reconnection & rate limiting
 
@@ -332,7 +332,7 @@ createClient({
 ```
 
 An emitted `error` without a listener would crash the process (Node behavior), so
-the SDK only emits it when you're listening — otherwise it routes to the logger.
+the SDK only emits it when you're listening; otherwise it routes to the logger.
 Attaching `wa.on('error', …)` is still recommended.
 
 ## LIDs (anonymous identity)
@@ -380,7 +380,7 @@ const wa = createClient({
 
 ### Multiple accounts
 
-Run several numbers in one process — one `Client` per account with a distinct
+Run several numbers in one process: one `Client` per account with a distinct
 `session` (each gets its own credentials folder). See
 [`examples/multi-account.ts`](./examples/multi-account.ts).
 
@@ -397,7 +397,7 @@ await Promise.all(clients.map((wa) => wa.start()));
 
 ## API overview
 
-**`createClient(options)`** — `session`, `authStrategy`, `pairingCode`,
+**`createClient(options)`**: `session`, `authStrategy`, `pairingCode`,
 `autoReconnect`, `maxReconnectAttempts`, `reconnectDelayMs`, `rateLimitMs`,
 `stateStore`, `history`, `printQRInTerminal`, `deviceName`, `markOnlineOnConnect`,
 `commandPrefix`, `logger`.
@@ -418,7 +418,7 @@ await Promise.all(clients.map((wa) => wa.start()));
   / `setProfilePicture` / `removeProfilePicture` / `setName` / `setStatus` /
   `getStatus` / `blockUser` / `unblockUser` / `getBlocklist`.
 - Queries: `chat(id)` / `isRegisteredUser` / `getLid`.
-- `socket` — the raw Baileys `WASocket` (escape hatch).
+- `socket`: the raw Baileys `WASocket` (escape hatch).
 
 Full typed API reference:
 **[pablofdezr.github.io/whatsweb/docs](https://pablofdezr.github.io/whatsweb/docs/)**

@@ -79,7 +79,7 @@ export class Conversation extends Chat {
    * Builds a `{ role, content }` transcript from the chat history: your messages
    * become `assistant` turns, the other party's become `user` turns, with an
    * optional `system` prompt first. Feed it to your own agent (e.g. the Vercel
-   * AI SDK) — this SDK stays out of the LLM's way.
+   * AI SDK). This SDK stays out of the LLM's way.
    */
   toMessages(options: { systemPrompt?: string; limit?: number } = {}): ChatMessage[] {
     const history = this.history();

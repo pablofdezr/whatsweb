@@ -3,8 +3,8 @@
  *
  * A JID identifies a chat, contact or group. With the modern Multi-Device
  * system there are two ways to identify a user:
- *   - PN  (Phone Number):  `34123456789@s.whatsapp.net`  — the classic format.
- *   - LID (Local ID):      `123456789@lid`               — an anonymous
+ *   - PN  (Phone Number):  `34123456789@s.whatsapp.net`    The classic format.
+ *   - LID (Local ID):      `123456789@lid`                 An anonymous
  *     identifier that WhatsApp assigns to each user to preserve their privacy
  *     (e.g. in large groups). As of Baileys 7 it is the default format for
  *     new sessions.

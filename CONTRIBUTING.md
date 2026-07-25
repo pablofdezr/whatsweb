@@ -65,11 +65,11 @@ the cryptography (Noise handshake, Signal, protobuf, media encryption).
 
 ## Continuous integration
 
-- **`ci.yml`** — lint, format check, typecheck, build and tests on Node 20 & 22,
+- **`ci.yml`**: lint, format check, typecheck, build and tests on Node 20 & 22,
   plus a `compat` job that installs, builds and tests with **pnpm** and **Bun**.
-- **`publish.yml`** — publishes to npm on `v*` tags (needs an `NPM_TOKEN` repo
+- **`publish.yml`**: publishes to npm on `v*` tags (needs an `NPM_TOKEN` repo
   secret).
-- **`docs.yml`** — builds the hand-made landing page (`web/index.html`) plus the
+- **`docs.yml`**: builds the hand-made landing page (`web/index.html`) plus the
   Docusaurus docs site (`docs/`, which generates the API reference from the
   source via `docusaurus-plugin-typedoc`) and deploys them to **GitHub Pages** on
   every push to `main`. Served at `https://pablofdezr.github.io/whatsweb/`
@@ -82,7 +82,7 @@ Docusaurus's heavy dependencies never touch the SDK package.
 ## Releasing
 
 The package is published as `@whatsweb/core` (the `@whatsweb` npm org). Releases
-are automated by tags — you don't publish from your machine:
+are automated by tags, so you don't publish from your machine:
 
 1. Update `CHANGELOG.md`.
 2. Bump the version and tag it:

@@ -107,7 +107,7 @@ export class Context {
     return this.message.react(emoji);
   }
 
-  /** Shows "typing…" for a moment, then replies — feels more human. */
+  /** Shows "typing…" for a moment, then replies, which feels more human. */
   async replyWithTyping(content: string, options: { delayMs?: number } = {}): Promise<Message> {
     const stop = await this.typing();
     await new Promise((resolve) => setTimeout(resolve, options.delayMs ?? 800));

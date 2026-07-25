@@ -3,8 +3,8 @@ import type { Message } from './Message.js';
 /**
  * In-memory, bounded message history observed while the client runs. Keeps up
  * to `limit` messages per chat and at most `maxChats` chats (least-recently
- * active chats are evicted). This is session history — messages seen via events
- * and messages you send — not a full server-side backfill.
+ * active chats are evicted). This is session history: messages seen via events
+ * and messages you send, not a full server-side backfill.
  */
 export class History {
   private readonly chats = new Map<string, Message[]>();

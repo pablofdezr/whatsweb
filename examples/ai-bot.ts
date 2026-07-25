@@ -1,6 +1,6 @@
 /**
  * AI chatbot powered by the Vercel AI SDK. Every incoming message is answered
- * by Claude, with the recent chat history as context — `toMessages()` converts
+ * by Claude, with the recent chat history as context. `toMessages()` converts
  * whatsweb's per-chat history straight into AI SDK messages.
  *
  * Setup:
@@ -20,7 +20,7 @@ import { createClient } from '../src/index.js';
 const MODEL = 'anthropic/claude-opus-4.8';
 
 const INSTRUCTIONS = `You are a helpful assistant chatting on WhatsApp.
-Keep replies short and conversational — a couple of sentences, no markdown
+Keep replies short and conversational: a couple of sentences, no markdown
 headers or bullet lists. Match the language the user writes in.`;
 
 const wa = createClient({ session: 'ai-demo', deviceName: 'whatsweb-ai' });
@@ -33,7 +33,7 @@ wa.on('message', async (ctx) => {
 
   try {
     // The just-received message is already in the history, so the transcript
-    // ends with the user's latest turn — no separate prompt needed.
+    // ends with the user's latest turn, so no separate prompt needed.
     const messages = ctx.conversation.toMessages({ limit: 20 }) as ModelMessage[];
 
     const { text } = await generateText({

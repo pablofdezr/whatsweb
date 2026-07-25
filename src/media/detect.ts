@@ -83,7 +83,7 @@ export async function detectMediaKind(link: string): Promise<MediaKind> {
         if (byMime) return byMime;
       }
     } catch {
-      // ignore network/HEAD errors — fall back to document
+      // ignore network/HEAD errors, fall back to document
     }
   }
 
