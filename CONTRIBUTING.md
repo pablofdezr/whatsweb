@@ -25,7 +25,7 @@ npm test               # unit tests (node:test)
 npm run lint           # ESLint
 npm run format         # Prettier --write
 npm run format:check   # Prettier --check
-npm run docs           # build the Docusaurus docs site (website/ → website/build)
+npm run docs           # build the Docusaurus docs site (docs/ → docs/build)
 npm run docs:dev       # run the docs site locally with hot reload
 npm run example:bot                    # demo bot, callback style (scan the QR)
 npm run example:async                  # same bot, async/await style
@@ -55,6 +55,8 @@ src/
   util/         jid, content, logger, eventStream, queue, vcard
 examples/       runnable examples
 test/           unit tests (node:test)
+web/            hand-made landing page (index.html)
+docs/           Docusaurus documentation site
 ```
 
 `whatsweb` is a thin, ergonomic layer over
@@ -68,13 +70,13 @@ the cryptography (Noise handshake, Signal, protobuf, media encryption).
 - **`publish.yml`** — publishes to npm on `v*` tags (needs an `NPM_TOKEN` repo
   secret).
 - **`docs.yml`** — builds the hand-made landing page (`web/index.html`) plus the
-  Docusaurus docs site (`website/`, which generates the API reference from the
+  Docusaurus docs site (`docs/`, which generates the API reference from the
   source via `docusaurus-plugin-typedoc`) and deploys them to **GitHub Pages** on
   every push to `main`. Served at `https://pablofdezr.github.io/whatsweb/`
   (landing) and `/docs/` (documentation). Pages must be enabled with the
   "GitHub Actions" source (this repo already is).
 
-The docs site lives in `website/` with its **own** `package.json`/lockfile, so
+The docs site lives in `docs/` with its **own** `package.json`/lockfile, so
 Docusaurus's heavy dependencies never touch the SDK package.
 
 ## Releasing

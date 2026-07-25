@@ -2,13 +2,13 @@
 
 [![npm](https://img.shields.io/npm/v/@whatsweb/core.svg)](https://www.npmjs.com/package/@whatsweb/core)
 [![downloads](https://img.shields.io/npm/dm/@whatsweb/core.svg)](https://www.npmjs.com/package/@whatsweb/core)
-[![docs](https://img.shields.io/badge/docs-website-25D366.svg)](https://pablofdezr.github.io/whatsweb/)
+[![docs](https://img.shields.io/badge/docs-online-25D366.svg)](https://pablofdezr.github.io/whatsweb/docs/)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/types-included-blue.svg)](./dist/index.d.ts)
 [![Baileys](https://img.shields.io/badge/built%20on-Baileys%207-25D366.svg)](https://github.com/WhiskeySockets/Baileys)
 
-📖 **[Website & API documentation](https://pablofdezr.github.io/whatsweb/)**
+📖 **[Landing page](https://pablofdezr.github.io/whatsweb/)** · **[API documentation](https://pablofdezr.github.io/whatsweb/docs/)**
 
 A great-DX SDK for WhatsApp Web with **no browser** — no Puppeteer, no headless
 Chromium. It speaks the native Multi-Device protocol directly over a WebSocket

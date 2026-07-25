@@ -14,6 +14,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['dist/**', 'docs/**', 'site/**', 'website/**', 'node_modules/**'],
+    ignores: ['dist/**', 'docs/**', 'site/**', 'node_modules/**'],
   },
 );
