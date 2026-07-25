@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>whatsweb — WhatsApp Web SDK with no browser</title>
+    <title>whatsweb: WhatsApp Web SDK with no browser</title>
     <meta
       name="description"
       content="A great-DX, fully-typed SDK for WhatsApp Web with no browser. Command router, media helpers, groups, presence, multiple accounts and more, on the native Multi-Device protocol."
@@ -12,8 +12,18 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%2325d366'/></svg>"
     />
+    <script>
+      // Set the theme before paint to avoid a flash.
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t) document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
     <style>
       :root {
+        color-scheme: light;
         --bg: #ffffff;
         --surface: #fafafa;
         --fg: #0f0f0f;
@@ -33,8 +43,10 @@
         --prose: 620px;
         --r: 12px;
       }
+      /* Dark palette: follows the system unless the toggle pins a theme. */
       @media (prefers-color-scheme: dark) {
-        :root {
+        :root:not([data-theme='light']) {
+          color-scheme: dark;
           --bg: #0a0a0a;
           --surface: #111111;
           --fg: #ededed;
@@ -50,6 +62,23 @@
           --sx-num: #79c0ff;
           --sx-com: #6e7681;
         }
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --bg: #0a0a0a;
+        --surface: #111111;
+        --fg: #ededed;
+        --fg-soft: #8d8d8d;
+        --border: #1e1e1e;
+        --border-strong: #2f2f2f;
+        --accent: #3ecf8e;
+        --brand: #25d366;
+        --on-solid: #0a0a0a;
+
+        --sx-key: #d2a8ff;
+        --sx-str: #7ee787;
+        --sx-num: #79c0ff;
+        --sx-com: #6e7681;
       }
 
       * {
@@ -158,6 +187,53 @@
       }
       .nav ul a:hover {
         color: var(--fg);
+      }
+      .icon-btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-left: 4px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--fg-soft);
+        cursor: pointer;
+        transition-property: color, background-color, scale;
+        transition-duration: 150ms;
+        transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+      }
+      .icon-btn::before {
+        content: '';
+        position: absolute;
+        inset: -3px; /* 40px hit area */
+      }
+      .icon-btn:hover {
+        color: var(--fg);
+        background: color-mix(in srgb, var(--fg) 7%, transparent);
+      }
+      .icon-btn:active {
+        scale: 0.96;
+      }
+      .theme-icon-sun {
+        display: none;
+      }
+      :root[data-theme='dark'] .theme-icon-sun {
+        display: block;
+      }
+      :root[data-theme='dark'] .theme-icon-moon {
+        display: none;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) .theme-icon-sun {
+          display: block;
+        }
+        :root:not([data-theme='light']) .theme-icon-moon {
+          display: none;
+        }
       }
       @media (max-width: 620px) {
         .hide-sm {
@@ -463,6 +539,18 @@
         font-size: 0.87rem;
         line-height: 1.55;
       }
+      .ex-group + .ex-group {
+        margin-top: 56px;
+      }
+      .ex-group > .group {
+        margin: 0 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--fg-soft);
+      }
 
       /* ---------- CTA + footer ---------- */
       .cta-block {
@@ -506,6 +594,39 @@
           <li><a href="#examples">Examples</a></li>
           <li><a href="./docs/">Docs</a></li>
           <li><a href="https://github.com/pablofdezr/whatsweb">GitHub</a></li>
+          <li>
+            <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+              <svg
+                class="theme-icon-moon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <svg
+                class="theme-icon-sun"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="4.5" />
+                <path
+                  d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                />
+              </svg>
+            </button>
+          </li>
         </ul>
       </div>
     </header>
@@ -569,7 +690,7 @@
             </div>
             <div class="feature">
               <h3>Media anywhere</h3>
-              <p>Path, http(s)/S3 URL, Buffer or stream — with auto type detection.</p>
+              <p>Path, http(s)/S3 URL, Buffer or stream, with auto type detection.</p>
             </div>
             <div class="feature">
               <h3>Rich messages</h3>
@@ -635,7 +756,7 @@
             </div>
           </div>
           <p class="note">
-            Add <code>"type": "module"</code> to your <code>package.json</code> — Baileys 7 (and this
+            Add <code>"type": "module"</code> to your <code>package.json</code>. Baileys 7 (and this
             SDK) are ESM-only. Bun can also run the TypeScript examples directly, no build step.
           </p>
         </div>
@@ -648,301 +769,562 @@
           <p class="label">Examples</p>
           <h2>Real snippets</h2>
           <p class="sub">For the things you'll actually build. Hover a block to copy it.</p>
-          <div class="examples">
-            <article class="ex">
-              <h3>Multiple accounts</h3>
-              <p class="desc">
-                Run several numbers in one process — one client per account, each with its own
-                session folder.
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  const accounts = ['personal', 'work'];
-                  const clients = accounts.map((name) => createClient({ session: name }));
 
-                  for (const wa of clients) {
-                    wa.on('ready', (me) => console.log('connected:', me.number));
-                    wa.command('ping', (ctx) => ctx.reply('pong'));
-                  }
+          <div class="ex-group">
+            <p class="group">Setup &amp; sessions</p>
+            <div class="examples">
+              <article class="ex">
+                <h3>Multiple accounts</h3>
+                <p class="desc">
+                  Run several numbers in one process: one client per account, each with its own
+                  session folder.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    const accounts = ['personal', 'work'];
+                    const clients = accounts.map((name) => createClient({ session: name }));
 
-                  await Promise.all(clients.map((wa) => wa.start()));
-
-                  // send from a specific account
-                  await clients[1].sendText('34600112233', 'Hello from work');
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Async / await style</h3>
-              <p class="desc">
-                Prefer a linear flow? Iterate incoming messages instead of registering callbacks.
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  await wa.start();
-                  const me = await wa.waitUntilReady();
-
-                  for await (const ctx of wa.messages()) {
-                    if (ctx.command === 'ping') await ctx.reply('pong');
-                    else if (/hello/i.test(ctx.text)) await ctx.react('👋');
-                  }
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Pairing by code (no QR)</h3>
-              <p class="desc">Link an account with an 8-character code instead of scanning a QR.</p>
-              <div class="code">
-                <script type="text/plain">
-                  const wa = createClient({ session: 'my-bot', pairingCode: '34600112233' });
-
-                  wa.on('pairing_code', (code) => console.log('Enter on your phone:', code));
-                  await wa.start();
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Send media</h3>
-              <p class="desc">
-                Images, voice notes, documents and locations — sources can be a path, URL or Buffer.
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  await wa.sendImage('34600112233', './cat.jpg', { caption: 'meow' });
-                  await wa.sendVoice('34600112233', './note.ogg');
-                  await wa.sendDocument('34600112233', './invoice.pdf', { fileName: 'invoice.pdf' });
-                  await wa.sendLocation('34600112233', { latitude: 40.4168, longitude: -3.7038 });
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Send from a link (S3, CDNs)</h3>
-              <p class="desc">
-                Point at any URL — the media kind (image/video/audio/document) is detected for you.
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  // auto-detects the media kind
-                  await wa.sendFromLink('34600112233', 'https://bucket.s3.amazonaws.com/report.pdf');
-                  await wa.sendFromLink('34600112233', 'https://cdn.example.com/clip.mp4', { caption: 'look' });
-
-                  // stream a private S3 object without buffering
-                  const obj = await s3.send(new GetObjectCommand({ Bucket, Key }));
-                  await wa.sendVideo('34600112233', { stream: obj.Body });
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Rich messages</h3>
-              <p class="desc">Mentions, polls, stickers and contact cards.</p>
-              <div class="code">
-                <script type="text/plain">
-                  await wa.sendText(group, 'ping @34600112233', { mentions: ['34600112233'] });
-                  await wa.sendPoll('34600112233', { name: 'Pizza?', options: ['Yes', 'No'] });
-                  await wa.sendSticker('34600112233', './sticker.webp');
-                  await wa.sendContact('34600112233', { fullName: 'Ada Lovelace', phone: '34600112233' });
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Edit, delete, forward</h3>
-              <p class="desc">Manage messages after sending them.</p>
-              <div class="code">
-                <script type="text/plain">
-                  const msg = await wa.sendText('34600112233', 'typo');
-                  await msg.edit('fixed');
-                  await msg.delete(); // delete for everyone
-
-                  wa.on('message', (ctx) => ctx.forward('34611111111'));
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Groups</h3>
-              <p class="desc">A fluent handle for every group operation.</p>
-              <div class="code">
-                <script type="text/plain">
-                  const group = wa.group('120363...@g.us');
-
-                  await group.addParticipants(['34600112233']);
-                  await group.promote(['34600112233']);
-                  await group.setSubject('New name');
-                  console.log(await group.inviteLink()); // https://chat.whatsapp.com/...
-                  await group.leave();
-
-                  // create / join
-                  await wa.createGroup('My group', ['34600112233', '34611111111']);
-                  await wa.joinGroupViaLink('https://chat.whatsapp.com/AbCdEf...');
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Presence &amp; profile</h3>
-              <p class="desc">
-                Set your presence and profile, read other people's, manage the block list.
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  await wa.setPresence('available');
-                  await wa.setName('My Bot');
-                  await wa.setStatus('Available 24/7');
-                  await wa.setProfilePicture('./avatar.jpg');
-
-                  const url = await wa.getProfilePictureUrl('34600112233', true);
-                  const about = await wa.getStatus('34600112233');
-                  await wa.blockUser('34600112233');
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Per-user state</h3>
-              <p class="desc">
-                Remember context per user, persisted through a pluggable store (in-memory by
-                default, or Redis/DB).
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  wa.on('message', async (ctx) => {
-                    const state = ctx.conversation.state;
-                    const count = (await state.get('count')) ?? 0;
-                    await state.set('count', count + 1);
-                    await ctx.reply(`That's message #${count + 1} from you`);
-                  });
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Wizard (ask &amp; save)</h3>
-              <p class="desc">
-                Prompt the user, await their replies, and store the answers — a full signup flow.
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  wa.command('signup', async (ctx) => {
-                    const convo = ctx.conversation;
-                    const name = await convo.askText('What is your name?');
-                    const email = await convo.askText('And your email?', { timeoutMs: 60_000 });
-                    await convo.state.patch({ name, email });
-                    await convo.text(`Thanks ${name}, you're all set`);
-                  });
-                </script>
-              </div>
-            </article>
-
-            <article class="ex">
-              <h3>Confirm a value</h3>
-              <p class="desc">
-                Ask yes/no and get a boolean — accepted answers are configurable (defaults cover
-                en/es plus 👍/👎).
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  wa.command('email', async (ctx) => {
-                    const convo = ctx.conversation;
-                    const email = await convo.askText('What is your email?');
-                    if (await convo.confirm(`Confirm your email is ${email}? (yes/no)`)) {
-                      await convo.state.set('email', email);
-                      await convo.text('Saved');
+                    for (const wa of clients) {
+                      wa.on('ready', (me) => console.log('connected:', me.number));
+                      wa.command('ping', (ctx) => ctx.reply('pong'));
                     }
-                  });
-                </script>
-              </div>
-            </article>
 
-            <article class="ex">
-              <h3>Bring your own agent (LLM)</h3>
-              <p class="desc">
-                whatsweb is unopinionated about LLMs — it hands you the transcript, you drive the
-                model (here, the Vercel AI SDK).
-              </p>
-              <div class="code">
-                <script type="text/plain">
-                  import { generateText } from 'ai';
-                  import { openai } from '@ai-sdk/openai';
+                    await Promise.all(clients.map((wa) => wa.start()));
 
-                  wa.on('message', async (ctx) => {
-                    const { text } = await generateText({
-                      model: openai('gpt-4o-mini'),
-                      system: 'You are a helpful WhatsApp assistant. Keep replies short.',
-                      messages: ctx.conversation.toMessages({ limit: 20 }),
+                    // send from a specific account
+                    await clients[1].sendText('34600112233', 'Hello from work');
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Persistent sessions</h3>
+                <p class="desc">
+                  Credentials live on disk, so you only scan once. Point them wherever you like.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    import { createClient, LocalAuth } from '@whatsweb/core';
+
+                    // shortcut: stored in .whatsweb_auth/my-bot
+                    const wa = createClient({ session: 'my-bot' });
+
+                    // or take full control of where the session lives
+                    const work = createClient({
+                      authStrategy: new LocalAuth({ clientId: 'work', dataPath: './sessions' }),
                     });
-                    await ctx.replyWithTyping(text);
-                  });
-                </script>
-              </div>
-            </article>
+                  </script>
+                </div>
+              </article>
 
-            <article class="ex">
-              <h3>Download media</h3>
-              <p class="desc">Save incoming attachments to disk.</p>
-              <div class="code">
-                <script type="text/plain">
-                  import { writeFile } from 'node:fs/promises';
+              <article class="ex">
+                <h3>Pairing by code (no QR)</h3>
+                <p class="desc">Link an account with an 8-character code instead of scanning a QR.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    const wa = createClient({ session: 'my-bot', pairingCode: '34600112233' });
 
-                  wa.on('message', async (ctx) => {
-                    if (!ctx.message.hasMedia) return;
-                    const buffer = await ctx.downloadMedia();
-                    await writeFile(`./downloads/${ctx.message.id}`, buffer);
-                    await ctx.react('💾');
-                  });
-                </script>
-              </div>
-            </article>
+                    wa.on('pairing_code', (code) => console.log('Enter on your phone:', code));
+                    await wa.start();
+                  </script>
+                </div>
+              </article>
 
-            <article class="ex">
-              <h3>Reconnection &amp; rate limiting</h3>
-              <p class="desc">Stay online with backoff, and space out sends to reduce ban risk.</p>
-              <div class="code">
-                <script type="text/plain">
-                  const wa = createClient({
-                    autoReconnect: true,      // default
-                    maxReconnectAttempts: 10, // default: Infinity
-                    reconnectDelayMs: 1000,   // base backoff, capped at 30s
-                    rateLimitMs: 1000,        // >= 1s between outgoing messages
-                  });
-                </script>
-              </div>
-            </article>
+              <article class="ex">
+                <h3>Render the QR yourself</h3>
+                <p class="desc">
+                  Turn off the terminal output and do what you want with the raw value: a PNG, a web
+                  page, a Slack message.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    const wa = createClient({ printQRInTerminal: false });
 
-            <article class="ex">
-              <h3>Middleware &amp; groups filter</h3>
-              <p class="desc">Compose behavior; in groups, only react to commands.</p>
-              <div class="code">
-                <script type="text/plain">
-                  wa.use(async (ctx, next) => {
-                    console.log(`${ctx.sender.displayName}: ${ctx.text}`);
-                    if (ctx.isGroup && !ctx.command) return; // stop the chain
-                    await next();
-                  });
-                </script>
-              </div>
-            </article>
+                    wa.on('qr', async (qr) => {
+                      qr.printToTerminal({ small: true }); // ASCII art, if you still want it
+                      await renderPng(qr.raw);             // or build your own image
+                    });
+                  </script>
+                </div>
+              </article>
 
-            <article class="ex">
-              <h3>Events</h3>
-              <p class="desc">Every event is strongly typed.</p>
-              <div class="code">
-                <script type="text/plain">
-                  wa.on('qr', (qr) => qr.printToTerminal());
-                  wa.on('ready', (info) => {});
-                  wa.on('message', (ctx) => {});
-                  wa.on('reaction', ({ emoji, key, fromMe }) => {});
-                  wa.on('presence', ({ id, presences }) => {});
-                  wa.on('disconnected', ({ code, reconnecting }) => {});
-                  wa.on('error', (err) => {});
-                </script>
-              </div>
-            </article>
+              <article class="ex">
+                <h3>Reconnection &amp; rate limiting</h3>
+                <p class="desc">Stay online with backoff, and space out sends to reduce ban risk.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    const wa = createClient({
+                      autoReconnect: true,      // default
+                      maxReconnectAttempts: 10, // default: Infinity
+                      reconnectDelayMs: 1000,   // base backoff, capped at 30s
+                      rateLimitMs: 1000,        // >= 1s between outgoing messages
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Logging &amp; device name</h3>
+                <p class="desc">
+                  Silent by default. Pass a pino-compatible logger when you need to see the wire.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    import pino from 'pino';
+
+                    const wa = createClient({
+                      logger: pino({ level: 'debug' }),
+                      deviceName: 'my-bot',     // shown under "Linked devices"
+                      markOnlineOnConnect: true,
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Graceful shutdown</h3>
+                <p class="desc">
+                  Close the socket without losing the session, or unlink the device for good.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    process.on('SIGINT', async () => {
+                      await wa.destroy(); // closes the socket, keeps the session on disk
+                      process.exit(0);
+                    });
+
+                    // unlink the device and wipe the stored credentials
+                    await wa.logout();
+                  </script>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="ex-group">
+            <p class="group">Sending</p>
+            <div class="examples">
+              <article class="ex">
+                <h3>Send media</h3>
+                <p class="desc">
+                  Images, voice notes, documents and locations. Sources can be a path, URL or Buffer.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    await wa.sendImage('34600112233', './cat.jpg', { caption: 'meow' });
+                    await wa.sendVoice('34600112233', './note.ogg');
+                    await wa.sendDocument('34600112233', './invoice.pdf', { fileName: 'invoice.pdf' });
+                    await wa.sendLocation('34600112233', { latitude: 40.4168, longitude: -3.7038 });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Send from a link (S3, CDNs)</h3>
+                <p class="desc">
+                  Point at any URL and the media kind (image/video/audio/document) is detected for
+                  you.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    // auto-detects the media kind
+                    await wa.sendFromLink('34600112233', 'https://bucket.s3.amazonaws.com/report.pdf');
+                    await wa.sendFromLink('34600112233', 'https://cdn.example.com/clip.mp4', { caption: 'look' });
+
+                    // stream a private S3 object without buffering
+                    const obj = await s3.send(new GetObjectCommand({ Bucket, Key }));
+                    await wa.sendVideo('34600112233', { stream: obj.Body });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Rich messages</h3>
+                <p class="desc">Mentions, polls, stickers and contact cards.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    await wa.sendText(group, 'ping @34600112233', { mentions: ['34600112233'] });
+                    await wa.sendPoll('34600112233', { name: 'Pizza?', options: ['Yes', 'No'] });
+                    await wa.sendSticker('34600112233', './sticker.webp');
+                    await wa.sendContact('34600112233', { fullName: 'Ada Lovelace', phone: '34600112233' });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Reply helpers</h3>
+                <p class="desc">
+                  Every send has a reply counterpart on the context, already addressed to the sender.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.command('cat', (ctx) => ctx.replyWithImage('./cat.jpg', { caption: 'meow' }));
+                    wa.command('note', (ctx) => ctx.replyWithVoice('./note.ogg'));
+                    wa.command('bill', (ctx) => ctx.replyWithDocument('./bill.pdf', { fileName: 'bill.pdf' }));
+                    wa.command('here', (ctx) => ctx.replyWithLocation({ latitude: 40.4168, longitude: -3.7038 }));
+                    wa.command('clip', (ctx) => ctx.replyWithLink('https://cdn.example.com/clip.mp4'));
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Edit, delete, forward</h3>
+                <p class="desc">Manage messages after sending them.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    const msg = await wa.sendText('34600112233', 'typo');
+                    await msg.edit('fixed');
+                    await msg.delete(); // delete for everyone
+
+                    wa.on('message', (ctx) => ctx.forward('34611111111'));
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Download media</h3>
+                <p class="desc">Save incoming attachments to disk.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    import { writeFile } from 'node:fs/promises';
+
+                    wa.on('message', async (ctx) => {
+                      if (!ctx.message.hasMedia) return;
+                      const buffer = await ctx.downloadMedia();
+                      await writeFile(`./downloads/${ctx.message.id}`, buffer);
+                      await ctx.react('💾');
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Fluent chat handle</h3>
+                <p class="desc">
+                  Set the recipient once and keep calling methods on it, no JIDs to repeat.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    const chat = wa.chat('34600112233');
+
+                    await chat.text('Hello');
+                    await chat.image('./cat.jpg', { caption: 'meow' });
+                    await chat.fromLink('https://cdn.example.com/clip.mp4');
+
+                    const picture = await chat.profilePictureUrl(true);
+                    await chat.subscribePresence();
+                    await chat.block();
+                  </script>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="ex-group">
+            <p class="group">Routing &amp; flow</p>
+            <div class="examples">
+              <article class="ex">
+                <h3>Async / await style</h3>
+                <p class="desc">
+                  Prefer a linear flow? Iterate incoming messages instead of registering callbacks.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    await wa.start();
+                    const me = await wa.waitUntilReady();
+
+                    for await (const ctx of wa.messages()) {
+                      if (ctx.command === 'ping') await ctx.reply('pong');
+                      else if (/hello/i.test(ctx.text)) await ctx.react('👋');
+                    }
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Prefixes, aliases &amp; captures</h3>
+                <p class="desc">
+                  Choose your own command prefixes, give a handler several names, and read RegExp
+                  captures off the context.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    const wa = createClient({ commandPrefix: ['!', '/', '.'] }); // default: ['!', '/']
+
+                    wa.command(['ping', 'p'], (ctx) => ctx.reply('pong'));
+                    wa.command('say', (ctx) => ctx.reply(ctx.args.join(' ')));
+
+                    wa.hears(/^weather (\w+)/i, (ctx) => ctx.reply(`Forecast for ${ctx.match[1]}`));
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Middleware &amp; groups filter</h3>
+                <p class="desc">Compose behavior; in groups, only react to commands.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.use(async (ctx, next) => {
+                      console.log(`${ctx.sender.displayName}: ${ctx.text}`);
+                      if (ctx.isGroup && !ctx.command) return; // stop the chain
+                      await next();
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Typing &amp; read receipts</h3>
+                <p class="desc">
+                  Mark as seen, hold the typing indicator while you work, or let the SDK time it.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.on('message', async (ctx) => {
+                      await ctx.seen(); // blue ticks
+
+                      const stopTyping = await ctx.typing();
+                      const answer = await slowLookup(ctx.text);
+                      await stopTyping();
+
+                      await ctx.reply(answer);
+                    });
+
+                    // or in one call, with a fixed delay
+                    wa.command('slow', (ctx) => ctx.replyWithTyping('done', { delayMs: 1200 }));
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Wait for the next reply</h3>
+                <p class="desc">
+                  Pause a handler until the same person answers, or wait anywhere for a message that
+                  matches.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.command('name', async (ctx) => {
+                      await ctx.reply('What is your name?');
+                      const answer = await ctx.awaitReply({ timeoutMs: 30_000 });
+                      await answer.reply(`Nice to meet you, ${answer.text}`);
+                    });
+
+                    // outside a handler
+                    const ready = await wa.waitForMessage((c) => c.text === 'ready', { timeoutMs: 60_000 });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Events</h3>
+                <p class="desc">Every event is strongly typed.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.on('qr', (qr) => qr.printToTerminal());
+                    wa.on('ready', (info) => {});
+                    wa.on('message', (ctx) => {});
+                    wa.on('reaction', ({ emoji, key, fromMe }) => {});
+                    wa.on('presence', ({ id, presences }) => {});
+                    wa.on('disconnected', ({ code, reconnecting }) => {});
+                    wa.on('error', (err) => {});
+                  </script>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="ex-group">
+            <p class="group">Conversations &amp; state</p>
+            <div class="examples">
+              <article class="ex">
+                <h3>Per-user state</h3>
+                <p class="desc">
+                  Remember context per user, persisted through a pluggable store (in-memory by
+                  default, or Redis/DB).
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.on('message', async (ctx) => {
+                      const state = ctx.conversation.state;
+                      const count = (await state.get('count')) ?? 0;
+                      await state.set('count', count + 1);
+                      await ctx.reply(`That's message #${count + 1} from you`);
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Wizard (ask &amp; save)</h3>
+                <p class="desc">
+                  Prompt the user, await their replies, and store the answers: a full signup flow.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.command('signup', async (ctx) => {
+                      const convo = ctx.conversation;
+                      const name = await convo.askText('What is your name?');
+                      const email = await convo.askText('And your email?', { timeoutMs: 60_000 });
+                      await convo.state.patch({ name, email });
+                      await convo.text(`Thanks ${name}, you're all set`);
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Confirm a value</h3>
+                <p class="desc">
+                  Ask yes/no and get a boolean. Accepted answers are configurable (defaults cover
+                  en/es plus 👍/👎).
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    wa.command('email', async (ctx) => {
+                      const convo = ctx.conversation;
+                      const email = await convo.askText('What is your email?');
+                      if (await convo.confirm(`Confirm your email is ${email}? (yes/no)`)) {
+                        await convo.state.set('email', email);
+                        await convo.text('Saved');
+                      }
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Conversation history</h3>
+                <p class="desc">
+                  Recent messages are kept per chat, with a configurable window you can clear at any
+                  time.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    const wa = createClient({ history: { limit: 100, maxChats: 500 } });
+
+                    wa.command('count', async (ctx) => {
+                      const messages = ctx.conversation.history();
+                      await ctx.reply(`I remember ${messages.length} messages from this chat`);
+                    });
+
+                    wa.clearHistory('34600112233'); // or clearHistory() for every chat
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Custom state store</h3>
+                <p class="desc">
+                  Implement three methods to back conversation state with Redis, Postgres or
+                  anything else.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    const redis = createRedisClient();
+
+                    const wa = createClient({
+                      stateStore: {
+                        async get(chatId) {
+                          return JSON.parse((await redis.get(`wa:${chatId}`)) ?? '{}');
+                        },
+                        async set(chatId, state) {
+                          await redis.set(`wa:${chatId}`, JSON.stringify(state));
+                        },
+                        async delete(chatId) {
+                          await redis.del(`wa:${chatId}`);
+                        },
+                      },
+                    });
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Bring your own agent (LLM)</h3>
+                <p class="desc">
+                  whatsweb is unopinionated about LLMs. It hands you the transcript, you drive the
+                  model (here, the Vercel AI SDK).
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    import { generateText } from 'ai';
+                    import { openai } from '@ai-sdk/openai';
+
+                    wa.on('message', async (ctx) => {
+                      const { text } = await generateText({
+                        model: openai('gpt-4o-mini'),
+                        system: 'You are a helpful WhatsApp assistant. Keep replies short.',
+                        messages: ctx.conversation.toMessages({ limit: 20 }),
+                      });
+                      await ctx.replyWithTyping(text);
+                    });
+                  </script>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="ex-group">
+            <p class="group">Groups &amp; contacts</p>
+            <div class="examples">
+              <article class="ex">
+                <h3>Groups</h3>
+                <p class="desc">A fluent handle for every group operation.</p>
+                <div class="code">
+                  <script type="text/plain">
+                    const group = wa.group('120363...@g.us');
+
+                    await group.addParticipants(['34600112233']);
+                    await group.promote(['34600112233']);
+                    await group.setSubject('New name');
+                    console.log(await group.inviteLink()); // https://chat.whatsapp.com/...
+                    await group.leave();
+
+                    // create / join
+                    await wa.createGroup('My group', ['34600112233', '34611111111']);
+                    await wa.joinGroupViaLink('https://chat.whatsapp.com/AbCdEf...');
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Presence &amp; profile</h3>
+                <p class="desc">
+                  Set your presence and profile, read other people's, manage the block list.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    await wa.setPresence('available');
+                    await wa.setName('My Bot');
+                    await wa.setStatus('Available 24/7');
+                    await wa.setProfilePicture('./avatar.jpg');
+
+                    const url = await wa.getProfilePictureUrl('34600112233', true);
+                    const about = await wa.getStatus('34600112233');
+                    await wa.blockUser('34600112233');
+                  </script>
+                </div>
+              </article>
+
+              <article class="ex">
+                <h3>Check a number first</h3>
+                <p class="desc">
+                  Find out whether a number is on WhatsApp before sending, and resolve its LID.
+                </p>
+                <div class="code">
+                  <script type="text/plain">
+                    if (await wa.isRegisteredUser('34600112233')) {
+                      await wa.sendText('34600112233', 'Hi');
+                    }
+
+                    // LID: WhatsApp's anonymous identity for this contact
+                    const lid = await wa.getLid('34600112233');
+                    console.log(await wa.getBlocklist());
+                  </script>
+                </div>
+              </article>
+            </div>
           </div>
         </div>
       </section>
@@ -988,7 +1370,7 @@
           <p class="note">
             Other examples: <code>example:bot</code>, <code>example:async</code>,
             <code>example:pair</code>, <code>example:send</code>. Bun runs the
-            <code>examples/*.ts</code> files directly — no <code>tsx</code> needed.
+            <code>examples/*.ts</code> files directly, no <code>tsx</code> needed.
           </p>
         </div>
       </section>
@@ -1000,7 +1382,7 @@
           <div class="prose">
             <h2>Explore the full API</h2>
             <p class="sub">
-              Every class, method, event and option — auto-generated from the source.
+              Every class, method, event and option, auto-generated from the source.
             </p>
             <a class="btn btn-solid" href="./docs/">Open the documentation</a>
           </div>
@@ -1098,6 +1480,18 @@
           b.addEventListener('click', function () {
             copyTo(b, b.getAttribute('data-copy'));
           });
+        });
+
+        // Theme toggle: pins light/dark, otherwise the system decides.
+        var root = document.documentElement;
+        document.getElementById('theme-toggle').addEventListener('click', function () {
+          var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var current = root.getAttribute('data-theme') || (systemDark ? 'dark' : 'light');
+          var next = current === 'dark' ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          try {
+            localStorage.setItem('theme', next);
+          } catch (e) {}
         });
 
         document.querySelectorAll('[data-tabs]').forEach(function (t) {
