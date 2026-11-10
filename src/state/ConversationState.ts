@@ -12,7 +12,8 @@ export class ConversationState {
 
   /** The full state object for this chat. */
   async all(): Promise<Record<string, unknown>> {
-    return (await this.store.get(this.chatId)) ?? {};
+    // Copy so callers can't mutate the store's object behind its back.
+    return { ...((await this.store.get(this.chatId)) ?? {}) };
   }
 
   /** Reads a single value. */

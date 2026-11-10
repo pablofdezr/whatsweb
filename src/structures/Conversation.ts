@@ -1,3 +1,4 @@
+import { toModelMessages } from '../agent/model.js';
 import type { Client } from '../client/Client.js';
 import type { Context } from '../router/Context.js';
 import type { ConversationState } from '../state/ConversationState.js';
@@ -76,21 +77,33 @@ export class Conversation extends Chat {
   }
 
   /**
-   * Builds a `{ role, content }` transcript from the chat history: your messages
-   * become `assistant` turns, the other party's become `user` turns, with an
-   * optional `system` prompt first. Feed it to your own agent (e.g. the Vercel
-   * AI SDK). This SDK stays out of the LLM's way.
+   * Builds a `{ role, content }` transcript from the in-memory chat history:
+   * your messages become `assistant` turns, the other party's become `user`
+   * turns, with an optional `system` prompt first. Files are described in text
+   * (`[image]`, `[document: a.pdf]`) and voice notes use their transcript. In
+   * groups each turn is prefixed with the sender's name.
+   *
+   * If you keep the history in your own database, build the messages from
+   * your rows with `toModelMessages()` instead, which can also include images
+   * and PDFs.
    */
-  toMessages(options: { systemPrompt?: string; limit?: number } = {}): ChatMessage[] {
+  toMessages(
+    options: { systemPrompt?: string; limit?: number; senderNames?: boolean } = {},
+  ): ChatMessage[] {
     const history = this.history();
     const recent = options.limit ? history.slice(-options.limit) : history;
-    const messages: ChatMessage[] = [];
-    if (options.systemPrompt) messages.push({ role: 'system', content: options.systemPrompt });
-    for (const message of recent) {
-      const content = message.body;
-      if (content) messages.push({ role: message.fromMe ? 'assistant' : 'user', content });
-    }
-    return messages;
+    const entries = recent.map((m) => ({
+      fromMe: m.fromMe,
+      text: m.body,
+      transcript: m.transcript,
+      media: m.media,
+      sender: { name: m.sender?.name, phone: m.sender?.number },
+    }));
+    // Without attachments every message has plain string content.
+    return toModelMessages(entries, {
+      systemPrompt: options.systemPrompt,
+      senderNames: options.senderNames ?? this.isGroup,
+    }) as ChatMessage[];
   }
 
   /**

@@ -19,5 +19,10 @@ bun.lockb
 .wwebjs_auth/
 auth_info*/
 
+# Local configuration: API keys and phone numbers (never commit)
+.env
+.env.*
+!.env.example
+
 # npm auth (env-var reference; never commit)
 .npmrc

@@ -30,3 +30,33 @@ export class RateLimitedQueue {
     return result;
   }
 }
+
+/**
+ * Runs tasks one at a time per key (e.g. per chat), while different keys run in
+ * parallel. Used so that several quick messages from the same chat are handled
+ * in order instead of all at once.
+ */
+export class KeyedQueue {
+  private readonly tails = new Map<string, Promise<unknown>>();
+
+  /** Runs `task` after the previous task for the same key has finished. */
+  run<T>(key: string, task: () => Promise<T> | T): Promise<T> {
+    const previous = this.tails.get(key) ?? Promise.resolve();
+    const result = previous.then(task);
+    const tail = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    this.tails.set(key, tail);
+    // Forget keys with nothing pending, so the map doesn't grow forever.
+    void tail.then(() => {
+      if (this.tails.get(key) === tail) this.tails.delete(key);
+    });
+    return result;
+  }
+
+  /** Number of keys with pending tasks. */
+  get size(): number {
+    return this.tails.size;
+  }
+}

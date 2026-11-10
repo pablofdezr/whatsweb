@@ -40,3 +40,20 @@ test('a failing task does not break the queue', async () => {
   const ok = await queue.add(async () => 'ok');
   assert.equal(ok, 'ok');
 });
+
+test('KeyedQueue runs tasks in order per key and forgets idle keys', async () => {
+  const { KeyedQueue } = await import('../src/util/queue.js');
+  const queue = new KeyedQueue();
+  const order: string[] = [];
+  await Promise.all([
+    queue.run('a', async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      order.push('a1');
+    }),
+    queue.run('a', () => void order.push('a2')),
+    queue.run('b', () => void order.push('b1')),
+  ]);
+  assert.deepEqual(order, ['b1', 'a1', 'a2']);
+  await new Promise((r) => setImmediate(r));
+  assert.equal(queue.size, 0);
+});

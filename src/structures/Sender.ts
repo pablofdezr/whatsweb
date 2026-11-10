@@ -20,6 +20,13 @@ export class Sender {
     return isLidJid(this.id);
   }
 
+  /** LID JID, if known. */
+  get lid(): string | undefined {
+    if (isLidJid(this.id)) return this.id;
+    if (this.alt && isLidJid(this.alt)) return this.alt;
+    return undefined;
+  }
+
   /** Phone number JID, if known. `undefined` if only a LID is available. */
   get phoneJid(): string | undefined {
     if (isPnJid(this.id)) return this.id;

@@ -22,3 +22,12 @@ test('messageHasMedia detects downloadable media', () => {
   assert.ok(messageHasMedia({ documentMessage: {} }));
   assert.ok(!messageHasMedia({ conversation: 'x' }));
 });
+
+test('content helpers unwrap disappearing and view-once messages', () => {
+  assert.equal(extractText({ ephemeralMessage: { message: { conversation: 'hi' } } }), 'hi');
+  assert.equal(
+    getMessageType({ viewOnceMessageV2: { message: { imageMessage: {} } } }),
+    'imageMessage',
+  );
+  assert.ok(messageHasMedia({ ephemeralMessage: { message: { videoMessage: {} } } }));
+});

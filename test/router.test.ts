@@ -54,3 +54,39 @@ test('hears() matches a pattern and sets ctx.match', async () => {
   );
   assert.equal(matched, 'price');
 });
+
+test('Context args ignore spaces between prefix and command', () => {
+  const ctx = contextWithText(createClient(), '! sum 2 3');
+  assert.equal(ctx.command, 'sum');
+  assert.deepEqual(ctx.args, ['2', '3']);
+});
+
+test('Context reads commands inside disappearing messages', () => {
+  const wa = createClient();
+  const raw = {
+    key: { remoteJid: '34600112233@s.whatsapp.net', fromMe: false, id: 'B' },
+    message: { ephemeralMessage: { message: { extendedTextMessage: { text: '!ping now' } } } },
+  } as unknown as WAMessage;
+  const ctx = new Context(wa, new Message(wa, raw));
+  assert.equal(ctx.command, 'ping');
+  assert.deepEqual(ctx.args, ['now']);
+});
+
+test('Own messages report you as the sender', () => {
+  const wa = createClient();
+  wa.info = { jid: '34999000111:7@s.whatsapp.net', name: 'Me' };
+  const raw = {
+    key: { remoteJid: '34600112233@s.whatsapp.net', fromMe: true, id: 'C' },
+    message: { conversation: 'hi' },
+  } as unknown as WAMessage;
+  const sender = new Message(wa, raw).sender;
+  assert.equal(sender.id, '34999000111@s.whatsapp.net');
+  assert.equal(sender.name, 'Me');
+});
+
+test('waitForMessage rejects right away when the signal is already aborted', async () => {
+  const wa = createClient();
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(wa.waitForMessage(undefined, { signal: controller.signal }), /aborted/);
+});

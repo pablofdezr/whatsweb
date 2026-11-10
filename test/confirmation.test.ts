@@ -24,3 +24,8 @@ test('parseConfirmation honors custom answer lists', () => {
   assert.equal(parseConfirmation('reject', { yes: ['accept'], no: ['reject'] }), false);
   assert.equal(parseConfirmation('yes', { yes: ['accept'] }), undefined);
 });
+
+test('parseConfirmation ignores Spanish opening punctuation', () => {
+  assert.equal(parseConfirmation('¡Sí!'), true);
+  assert.equal(parseConfirmation('¿no?'), false);
+});

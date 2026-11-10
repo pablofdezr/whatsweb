@@ -1,4 +1,6 @@
 import type { AnyMessageContent } from 'baileys';
+import type { Principal, SenderIdentity } from '../auth/authorize.js';
+import type { Attachment, MediaInfo } from '../media/attachment.js';
 import type { Client } from '../client/Client.js';
 import type {
   AudioOptions,
@@ -22,6 +24,19 @@ export class Context {
   /** Result of the `RegExp` if the message matched a `hears(/…/)`. */
   match?: RegExpMatchArray;
 
+  /** The user your `authorize` function returned for this sender. */
+  principal?: Principal;
+
+  /** Who sent the message, as checked by `authorize` (phone resolved from the LID). */
+  identity?: SenderIdentity;
+
+  /**
+   * Set when the message was taken as the answer to `ask()` or
+   * `waitForMessage()`, so it isn't handled again as a new message.
+   * @internal
+   */
+  consumed = false;
+
   constructor(
     /** Client that originated the context (low-level access if needed). */
     public readonly client: Client,
@@ -29,9 +44,14 @@ export class Context {
     public readonly message: Message,
   ) {}
 
-  /** Message text (caption included). */
+  /** Message text (caption included), or the transcript of a voice note. */
   get text(): string {
-    return this.message.body;
+    return this.message.body || this.message.transcript || '';
+  }
+
+  /** What file the message carries (type, name, size…), if any. */
+  get media(): MediaInfo | undefined {
+    return this.message.media;
   }
 
   /** Chat JID (user or group). */
@@ -77,17 +97,21 @@ export class Context {
    * lowercased and without the prefix. `undefined` if it is not a command.
    */
   get command(): string | undefined {
-    const text = this.text;
-    const prefix = this.client.commandPrefixes.find((p) => text.startsWith(p));
-    if (!prefix) return undefined;
-    const word = text.slice(prefix.length).trim().split(/\s+/)[0];
-    return word ? word.toLowerCase() : undefined;
+    return this.commandWords()?.[0]?.toLowerCase();
   }
 
   /** Arguments following the command (`!add 2 3` -> `['2','3']`). */
   get args(): string[] {
-    if (!this.command) return [];
-    return this.text.trim().split(/\s+/).slice(1);
+    return this.commandWords()?.slice(1) ?? [];
+  }
+
+  /** Words after the command prefix, or `undefined` if the text is not a command. */
+  private commandWords(): string[] | undefined {
+    const text = this.text;
+    const prefix = this.client.commandPrefixes.find((p) => text.startsWith(p));
+    if (!prefix) return undefined;
+    const words = text.slice(prefix.length).trim().split(/\s+/).filter(Boolean);
+    return words.length > 0 ? words : undefined;
   }
 
   // --- Replies ---
@@ -159,6 +183,11 @@ export class Context {
   /** Downloads the message media as a Buffer. */
   downloadMedia(): Promise<Buffer> {
     return this.message.downloadMedia();
+  }
+
+  /** Downloads the file with its details; convert it for the model with `toModelPart()`. */
+  downloadAttachment(): Promise<Attachment> {
+    return this.message.downloadAttachment();
   }
 
   /** Forwards the message to another chat. */

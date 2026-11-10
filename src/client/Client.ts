@@ -3,6 +3,8 @@ import makeWASocket, {
   Browsers,
   DisconnectReason,
   fetchLatestBaileysVersion,
+  normalizeMessageContent,
+  proto,
   type AnyMessageContent,
   type ConnectionState,
   type GroupMetadata,
@@ -12,8 +14,11 @@ import makeWASocket, {
   type WASocket,
 } from 'baileys';
 import { LocalAuth } from '../auth/LocalAuth.js';
+import { isAllowed, type Authorizer, type SenderIdentity } from '../auth/authorize.js';
+import { mediaToBuffer, toOggOpus } from '../media/convert.js';
 import { detectMediaKind, fileNameFromLink } from '../media/detect.js';
-import { resolveMedia, type MediaSource } from '../media/resolve.js';
+import { detectMime, isOggOpus } from '../media/mime.js';
+import { resolveMedia, type MediaSource, type ResolvedMedia } from '../media/resolve.js';
 import { Qr } from '../qr/Qr.js';
 import { Context } from '../router/Context.js';
 import type { Handler, Middleware, Trigger } from '../router/types.js';
@@ -23,11 +28,12 @@ import { Chat } from '../structures/Chat.js';
 import { Conversation } from '../structures/Conversation.js';
 import { Group } from '../structures/Group.js';
 import { History } from '../structures/History.js';
-import { Message } from '../structures/Message.js';
+import { Message, parseSerializedMessage } from '../structures/Message.js';
+import { isControlMessage } from '../util/content.js';
 import { eventStream } from '../util/eventStream.js';
 import { ensureJid, jidToNumber } from '../util/jid.js';
 import { silentLogger } from '../util/logger.js';
-import { RateLimitedQueue } from '../util/queue.js';
+import { KeyedQueue, RateLimitedQueue } from '../util/queue.js';
 import { buildVCard } from '../util/vcard.js';
 import type { ClientEvents, ClientInfo, ClientOptions } from './options.js';
 import type {
@@ -51,7 +57,22 @@ interface NormalizedOptions {
   printQRInTerminal: boolean;
   deviceName: string;
   markOnlineOnConnect: boolean;
+  clearSessionOnLogout: boolean;
   logger: import('../util/logger.js').Logger;
+  authorize?: Authorizer;
+  transcribe?: ClientOptions['transcribe'];
+  concurrency: 'per-chat' | 'parallel';
+  ffmpegPath?: string;
+}
+
+/** The file name or link of a media source, used to guess its type and name. */
+function sourceName(source: MediaSource): string | undefined {
+  if (typeof source === 'string') return source;
+  if (typeof source === 'object' && source !== null) {
+    if ('url' in source && typeof source.url === 'string') return source.url;
+    if ('path' in source && typeof source.path === 'string') return source.path;
+  }
+  return undefined;
 }
 
 /**
@@ -66,6 +87,9 @@ interface NormalizedOptions {
  * await wa.start();
  * ```
  */
+/** How long each QR ref lives while linking by pairing code: the time to type the code (Baileys: 60 s, then 20 s). */
+const PAIRING_REF_MS = 3 * 60_000;
+
 export class Client extends EventEmitter {
   private readonly options: NormalizedOptions;
   private readonly prefixes: string[];
@@ -75,9 +99,20 @@ export class Client extends EventEmitter {
   private reconnectAttempts = 0;
   private reconnectTimer?: ReturnType<typeof setTimeout>;
   private manualClose = false;
+  private connected = false;
+  /** Sockets whose session ended: they must not write credentials any more. */
+  private readonly discardedSockets = new WeakSet<WASocket>();
   private readonly sendQueue?: RateLimitedQueue;
   private readonly store: StateStore;
   private readonly messageHistory?: History;
+  /** Receives messages in order per chat: authorize, transcribe, hand to waiters. */
+  private readonly intake = new KeyedQueue();
+  /** Runs handlers one message at a time per chat (`concurrency: 'per-chat'`). */
+  private readonly handlers = new KeyedQueue();
+  /** Handlers still running, so `whenIdle()` can wait for them. */
+  private readonly inflight = new Set<Promise<void>>();
+  /** Internal channel for `waitForMessage`/`ask`, which must not wait behind handlers. */
+  private readonly inbox = new EventEmitter().setMaxListeners(0);
 
   /** Account information once connected. */
   public info?: ClientInfo;
@@ -96,7 +131,12 @@ export class Client extends EventEmitter {
       printQRInTerminal: options.printQRInTerminal ?? true,
       deviceName: options.deviceName ?? 'whatsweb',
       markOnlineOnConnect: options.markOnlineOnConnect ?? false,
+      clearSessionOnLogout: options.clearSessionOnLogout ?? true,
       logger: options.logger ?? silentLogger,
+      authorize: options.authorize,
+      transcribe: options.transcribe,
+      concurrency: options.concurrency ?? 'per-chat',
+      ffmpegPath: options.ffmpegPath,
     };
     const prefix = options.commandPrefix ?? ['!', '/'];
     this.prefixes = Array.isArray(prefix) ? prefix : [prefix];
@@ -136,6 +176,11 @@ export class Client extends EventEmitter {
    */
   async initialize(): Promise<void> {
     this.manualClose = false;
+    // Calling start() again replaces the previous socket instead of running two at once.
+    // Detach it first so its close event doesn't trigger a reconnection.
+    const previous = this.sock;
+    this.sock = undefined;
+    previous?.end(undefined);
     const { state, saveCreds } = await this.options.authStrategy.getAuthState();
     const { version } = await fetchLatestBaileysVersion();
 
@@ -150,30 +195,46 @@ export class Client extends EventEmitter {
         ? Browsers.ubuntu('Chrome')
         : Browsers.ubuntu(this.options.deviceName),
       markOnlineOnConnect: this.options.markOnlineOnConnect,
+      // While linking by pairing code, the connection lives as long as WhatsApp's QR refs do
+      // (60 s, then 20 s each): when they run out it closes, and the reconnection asks for a
+      // new code, so the one being typed stops working. Longer refs give time to type it.
+      ...(this.options.pairingCode && !state.creds.registered ? { qrTimeout: PAIRING_REF_MS } : {}),
     });
 
     this.sock = sock;
-    sock.ev.on('creds.update', saveCreds);
-    sock.ev.on('connection.update', (u) => this.handleConnectionUpdate(u));
+    // Ignore late events from a socket that has since been replaced or destroyed,
+    // so they can't schedule a duplicate reconnection or emit stale messages.
+    const isCurrent = (): boolean => this.sock === sock;
+    sock.ev.on('creds.update', () => {
+      if (!this.discardedSockets.has(sock)) void saveCreds();
+    });
+    sock.ev.on('connection.update', (u) => {
+      if (isCurrent()) this.handleConnectionUpdate(u);
+    });
     sock.ev.on('messages.upsert', (u) => {
-      void this.handleMessagesUpsert(u);
+      if (isCurrent()) void this.handleMessagesUpsert(u);
     });
     sock.ev.on('messages.reaction', (reactions) => {
+      if (!isCurrent()) return;
       for (const r of reactions) {
         this.emit('reaction', { emoji: r.reaction.text ?? '', key: r.key, fromMe: !!r.key.fromMe });
       }
     });
-    sock.ev.on('presence.update', (update) => this.emit('presence', update));
+    sock.ev.on('presence.update', (update) => {
+      if (isCurrent()) this.emit('presence', update);
+    });
 
     // Login via pairing code (no QR).
     if (this.options.pairingCode && !state.creds.registered) {
-      setTimeout(() => this.requestPairingCode(this.options.pairingCode!), 3000);
+      setTimeout(() => {
+        if (isCurrent()) void this.requestPairingCode(this.options.pairingCode!);
+      }, 3000);
     }
   }
 
   /** Waits until the connection is ready. */
   waitUntilReady(timeoutMs?: number): Promise<ClientInfo> {
-    if (this.info) return Promise.resolve(this.info);
+    if (this.connected && this.info) return Promise.resolve(this.info);
     return new Promise((resolve, reject) => {
       const timer =
         timeoutMs !== undefined
@@ -265,6 +326,7 @@ export class Client extends EventEmitter {
     }
 
     if (connection === 'open') {
+      this.connected = true;
       this.reconnectAttempts = 0;
       const user = this.sock?.user as { id?: string; lid?: string; name?: string } | undefined;
       const jid = user?.id ?? '';
@@ -278,13 +340,32 @@ export class Client extends EventEmitter {
     }
 
     if (connection === 'close') {
+      this.connected = false;
       const code = (lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)
         ?.output?.statusCode;
       const loggedOut = code === DisconnectReason.loggedOut;
       const reconnecting = !this.manualClose && !loggedOut && this.options.autoReconnect;
       this.emit('disconnected', { code, reconnecting });
-      if (reconnecting) this.scheduleReconnect();
+      if (loggedOut && !this.manualClose) void this.handleLoggedOut();
+      else if (reconnecting) this.scheduleReconnect();
     }
+  }
+
+  /**
+   * WhatsApp ended the session from its side. The credentials are no longer
+   * valid, so they are deleted (unless disabled) to let the next `start()` link
+   * the device again instead of failing on every attempt.
+   */
+  private async handleLoggedOut(): Promise<void> {
+    if (this.sock) this.discardedSockets.add(this.sock);
+    this.sock = undefined;
+    this.info = undefined;
+    try {
+      if (this.options.clearSessionOnLogout) await this.options.authStrategy.clear?.();
+    } catch (err) {
+      this.emitError(err);
+    }
+    this.emit('logged_out');
   }
 
   /** Schedules a reconnection with exponential backoff and jitter. */
@@ -313,18 +394,171 @@ export class Client extends EventEmitter {
   }): Promise<void> {
     if (upsert.type !== 'notify') return;
 
+    const received: Promise<void>[] = [];
     for (const raw of upsert.messages) {
       if (!raw.message) continue;
+      const protocol = normalizeMessageContent(raw.message)?.protocolMessage;
+      if (protocol) {
+        this.handleProtocolMessage(raw, protocol, true);
+        continue;
+      }
+      // Reactions arrive through the 'reaction' event; poll votes, pins and the
+      // like carry no text. None of them should reach handlers as a message.
+      if (isControlMessage(raw.message)) continue;
       const ctx = new Context(this, new Message(this, raw));
+      received.push(this.intake.run(ctx.chatId, () => this.receive(ctx)));
+    }
+    await Promise.all(received);
+  }
+
+  /**
+   * First stage, in order per chat: authorize the sender, transcribe audio,
+   * record the message and hand it to `ask()` waiters. Then it schedules the
+   * handlers without waiting for them, so a handler blocked in `ask()` can
+   * still receive the answer.
+   */
+  private async receive(ctx: Context): Promise<void> {
+    try {
+      if (!ctx.fromMe) {
+        if (this.options.authorize) {
+          const identity = await this.resolveIdentity(ctx.message);
+          let principal: unknown;
+          try {
+            principal = await this.options.authorize(identity, ctx.message);
+          } catch (err) {
+            // Fail closed: if the check can't run, the message is rejected.
+            this.emitError(err);
+            principal = null;
+          }
+          if (!isAllowed(principal)) {
+            this.emit('unauthorized', { identity, ctx });
+            return;
+          }
+          ctx.identity = identity;
+          ctx.principal = principal as Context['principal'];
+        }
+        await this.transcribeAudio(ctx.message);
+      }
+
       this.messageHistory?.add(ctx.message);
       this.emit('message_create', ctx);
-      if (ctx.fromMe) continue;
-      this.emit('message', ctx);
-      try {
-        await this.runRouter(ctx);
-      } catch (err) {
-        this.emitError(err);
-      }
+      if (ctx.fromMe) return;
+
+      this.inbox.emit('message', ctx);
+      const run = () => this.handle(ctx);
+      const handling =
+        this.options.concurrency === 'per-chat' ? this.handlers.run(ctx.chatId, run) : run();
+      this.inflight.add(handling);
+      void handling.finally(() => this.inflight.delete(handling));
+    } catch (err) {
+      this.emitError(err);
+    }
+  }
+
+  /** Second stage: `message` listeners and the router, unless `ask()` took the message. */
+  private async handle(ctx: Context): Promise<void> {
+    if (ctx.consumed) return;
+    try {
+      // Awaited, so async listeners also run one message at a time per chat.
+      await Promise.all(
+        // rawListeners, so `once` listeners are removed after they run.
+        this.rawListeners('message').map((listener) => (listener as (c: Context) => unknown)(ctx)),
+      );
+      await this.runRouter(ctx);
+    } catch (err) {
+      this.emitError(err);
+    }
+  }
+
+  private async transcribeAudio(message: Message): Promise<void> {
+    if (!this.options.transcribe || message.media?.kind !== 'audio') return;
+    try {
+      const audio = await message.downloadAttachment();
+      message.transcript = (await this.options.transcribe(audio, message)) || undefined;
+    } catch (err) {
+      this.emitError(err);
+    }
+  }
+
+  /**
+   * Waits until every message received so far has been handled. Call it
+   * before `destroy()` for a graceful shutdown.
+   */
+  async whenIdle(): Promise<void> {
+    while (this.inflight.size > 0 || this.intake.size > 0) {
+      await Promise.all([...this.inflight]);
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  }
+
+  /**
+   * Who sent a message, with the phone number resolved from the LID when
+   * WhatsApp hides it. This is what the `authorize` function receives.
+   */
+  async resolveIdentity(message: Message): Promise<SenderIdentity> {
+    const sender = message.sender;
+    let phone = sender.number;
+    const lid = sender.lid;
+    if (!phone && lid) {
+      const pn = await this.getPhoneForLid(lid).catch(() => undefined);
+      if (pn) phone = jidToNumber(pn);
+    }
+    return {
+      jid: sender.id,
+      phone,
+      lid,
+      chatId: message.chatId,
+      isGroup: message.isGroup,
+      name: sender.name,
+    };
+  }
+
+  /** Phone-number JID for a LID, when WhatsApp has shared the mapping. */
+  async getPhoneForLid(lid: string): Promise<string | undefined> {
+    const mapping = (
+      this.sock as
+        | {
+            signalRepository?: {
+              lidMapping?: { getPNForLID?: (lid: string) => Promise<string | null> };
+            };
+          }
+        | undefined
+    )?.signalRepository?.lidMapping;
+    if (!mapping?.getPNForLID) return undefined;
+    return (await mapping.getPNForLID(lid)) ?? undefined;
+  }
+
+  /**
+   * Rebuilds a message saved with `serializeMessage()` (e.g. from your
+   * database), so you can download its file, quote it or forward it later.
+   */
+  restoreMessage(saved: string | WAMessage): Message {
+    return new Message(this, typeof saved === 'string' ? parseSerializedMessage(saved) : saved);
+  }
+
+  /** Applies an edit or a delete-for-everyone to the history and emits its event. */
+  private handleProtocolMessage(
+    raw: WAMessage,
+    protocol: proto.Message.IProtocolMessage,
+    emit: boolean,
+  ): void {
+    const chatId = raw.key.remoteJid ?? '';
+    const id = protocol.key?.id ?? '';
+    if (!chatId || !id) return;
+    const fromMe = !!raw.key.fromMe;
+    const { Type } = proto.Message.ProtocolMessage;
+
+    if (protocol.type === Type.REVOKE) {
+      this.messageHistory?.remove(chatId, id);
+      if (emit) this.emit('message_delete', { chatId, id, fromMe });
+    } else if (protocol.type === Type.MESSAGE_EDIT && protocol.editedMessage) {
+      const message = new Message(this, {
+        ...raw,
+        key: { ...raw.key, id },
+        message: protocol.editedMessage,
+      });
+      this.messageHistory?.replace(message);
+      if (emit) this.emit('message_edit', { chatId, id, fromMe, message });
     }
   }
 
@@ -400,7 +634,13 @@ export class Client extends EventEmitter {
     const sent = await this.dispatch(jid, payload, options);
     if (!sent) throw new Error('WhatsApp did not return the sent message');
     const message = new Message(this, sent);
-    this.messageHistory?.add(message);
+    // Your own edits and deletes update the history instead of being added to it.
+    const protocol = normalizeMessageContent(sent.message)?.protocolMessage;
+    if (protocol) this.handleProtocolMessage(sent, protocol, true);
+    else if (!isControlMessage(sent.message)) {
+      this.messageHistory?.add(message);
+      this.emit('message_create', new Context(this, message));
+    }
     return message;
   }
 
@@ -409,29 +649,74 @@ export class Client extends EventEmitter {
     return this.send(to, { text, mentions: mentions?.map(ensureJid) }, misc);
   }
 
+  /** The real MIME type of a file, from its bytes or else its name. */
+  private mimeOf(source: MediaSource, media: ResolvedMedia): string | undefined {
+    return detectMime({
+      data: Buffer.isBuffer(media) ? media : undefined,
+      name: sourceName(source),
+    });
+  }
+
   async sendImage(to: string, source: MediaSource, options: CaptionOptions = {}): Promise<Message> {
     const { caption, mentions, ...misc } = options;
     const image = await resolveMedia(source);
-    return this.send(to, { image, caption, mentions: mentions?.map(ensureJid) }, misc);
+    const mime = this.mimeOf(source, image);
+    return this.send(
+      to,
+      {
+        image,
+        caption,
+        mentions: mentions?.map(ensureJid),
+        mimetype: mime?.startsWith('image/') ? mime : undefined,
+      },
+      misc,
+    );
   }
 
   async sendVideo(to: string, source: MediaSource, options: CaptionOptions = {}): Promise<Message> {
     const { caption, mentions, ...misc } = options;
     const video = await resolveMedia(source);
-    return this.send(to, { video, caption, mentions: mentions?.map(ensureJid) }, misc);
-  }
-
-  async sendAudio(to: string, source: MediaSource, options: AudioOptions = {}): Promise<Message> {
-    const { ptt, mimetype, ...misc } = options;
-    const audio = await resolveMedia(source);
+    const mime = this.mimeOf(source, video);
     return this.send(
       to,
-      { audio, ptt, mimetype: mimetype ?? (ptt ? 'audio/ogg; codecs=opus' : undefined) },
+      {
+        video,
+        caption,
+        mentions: mentions?.map(ensureJid),
+        mimetype: mime?.startsWith('video/') ? mime : undefined,
+      },
       misc,
     );
   }
 
-  /** Voice note (audio with `ptt: true`). */
+  /**
+   * Sends an audio file. With `ptt: true` it is sent as a voice note, and audio
+   * that isn't OGG/Opus (MP3, WAV, M4A, text-to-speech output…) is converted
+   * first, since WhatsApp only plays that format as a voice note. Conversion
+   * needs `ffmpeg`.
+   */
+  async sendAudio(to: string, source: MediaSource, options: AudioOptions = {}): Promise<Message> {
+    const { ptt, mimetype, ...misc } = options;
+    const resolved = await resolveMedia(source);
+    if (ptt) {
+      const data = await mediaToBuffer(resolved);
+      const audio = isOggOpus(data)
+        ? data
+        : await toOggOpus(data, { ffmpegPath: this.options.ffmpegPath });
+      return this.send(to, { audio, ptt: true, mimetype: 'audio/ogg; codecs=opus' }, misc);
+    }
+    const detected = this.mimeOf(source, resolved);
+    return this.send(
+      to,
+      {
+        audio: resolved,
+        mimetype: mimetype ?? (detected?.startsWith('audio/') ? detected : undefined),
+      },
+      misc,
+    );
+  }
+
+  /** Voice note (audio with `ptt: true`), converted to OGG/Opus if needed. */
   sendVoice(
     to: string,
     source: MediaSource,
@@ -447,9 +732,19 @@ export class Client extends EventEmitter {
   ): Promise<Message> {
     const { fileName, mimetype, caption, ...misc } = options;
     const document = await resolveMedia(source);
+    const name = sourceName(source);
+    const finalName = fileName ?? (name ? fileNameFromLink(name) : undefined);
+    const detected =
+      detectMime({ data: Buffer.isBuffer(document) ? document : undefined, name: finalName }) ??
+      (name ? detectMime({ name }) : undefined);
     return this.send(
       to,
-      { document, fileName, mimetype: mimetype ?? 'application/octet-stream', caption },
+      {
+        document,
+        fileName: finalName,
+        mimetype: mimetype ?? detected ?? 'application/octet-stream',
+        caption,
+      },
       misc,
     );
   }
@@ -710,7 +1005,8 @@ export class Client extends EventEmitter {
     const controller = new AbortController();
     let timedOut = false;
     const onAbort = (): void => controller.abort();
-    options.signal?.addEventListener('abort', onAbort, { once: true });
+    if (options.signal?.aborted) controller.abort();
+    else options.signal?.addEventListener('abort', onAbort, { once: true });
     const timer = options.timeoutMs
       ? setTimeout(() => {
           timedOut = true;
@@ -719,8 +1015,14 @@ export class Client extends EventEmitter {
       : undefined;
 
     try {
-      for await (const ctx of this.messages({ signal: controller.signal })) {
-        if (filter(ctx)) return ctx;
+      for await (const ctx of eventStream<Context>(this.inbox, 'message', {
+        signal: controller.signal,
+      })) {
+        if (!ctx.consumed && filter(ctx)) {
+          // It is the answer, so handlers won't process it again as a new message.
+          ctx.consumed = true;
+          return ctx;
+        }
       }
       throw new Error(timedOut ? 'waitForMessage: timed out' : 'waitForMessage: aborted');
     } finally {
@@ -809,10 +1111,14 @@ export class Client extends EventEmitter {
   /** Logs out of WhatsApp and deletes the local credentials. */
   async logout(): Promise<void> {
     this.stopReconnecting();
+    const sock = this.sock;
     try {
-      await this.sock?.logout();
+      await sock?.logout();
     } finally {
+      if (sock) this.discardedSockets.add(sock);
       await this.options.authStrategy.clear?.();
+      this.connected = false;
+      this.info = undefined;
       this.sock = undefined;
     }
   }
@@ -820,6 +1126,7 @@ export class Client extends EventEmitter {
   /** Closes the connection without unlinking the device. */
   async destroy(): Promise<void> {
     this.stopReconnecting();
+    this.connected = false;
     this.sock?.end(undefined);
     this.sock = undefined;
   }

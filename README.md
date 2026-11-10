@@ -37,6 +37,7 @@ await wa.start();
 - 👥 **Groups**: metadata, participants, invite links, create / join / leave.
 - 👤 **Presence & profile**: presence, profile pictures, status, block list.
 - 🧭 **Per-user conversations**: persistent state, message history, `ask`, and a neutral `toMessages()` to plug in your own LLM/agent.
+- 🧠 **Built for AI agents**: number-based authorization, photos and PDFs ready for the model, voice-note transcription, plain message records for your own database, and one-message-at-a-time handling per chat.
 - 🛟 **Resilient**: auto-reconnect with backoff and optional send rate-limiting.
 - 🆔 **LID-aware**: supports WhatsApp's anonymous identity system.
 - 🟦 **Typed**: written in TypeScript, ships `.d.ts`, ESM.
@@ -95,7 +96,7 @@ wa.use(async (ctx, next) => {
 
 | Property / method                       | Description                                        |
 | --------------------------------------- | -------------------------------------------------- |
-| `ctx.text`                              | Message text.                                      |
+| `ctx.text`                              | Message text (or the voice-note transcript).       |
 | `ctx.command` / `ctx.args`              | Parsed command name and arguments.                 |
 | `ctx.sender`                            | Identity (`.number`, `.displayName`, `.isLid`, …). |
 | `ctx.chat`                              | Fluent chat handle (`ctx.chat.image(...)`).        |
@@ -106,7 +107,10 @@ wa.use(async (ctx, next) => {
 | `ctx.replyWithImage(src, { caption })`  | …plus `replyWithVideo/Audio/Voice/Document/Location/Link`. |
 | `ctx.forward(to)` / `ctx.delete()`      | Forward or delete the message.                     |
 | `ctx.typing()`                          | Show "typing…"; returns a function to stop it.     |
+| `ctx.media`                             | File details: kind, MIME type, name, size, duration. |
 | `ctx.downloadMedia()`                   | Download the message media as a `Buffer`.          |
+| `ctx.downloadAttachment()`              | Download the file with its details, ready for the model. |
+| `ctx.principal`                         | The user your `authorize` function returned.       |
 | `ctx.awaitReply({ timeoutMs? })`        | Await the next reply in this chat (same sender).   |
 | `ctx.conversation`                      | Rich per-user handle: state, history, `ask`, send. |
 | `ctx.replyWithTyping(text)`             | Show "typing…" briefly, then reply.                |
@@ -297,7 +301,8 @@ Tune or disable it: `createClient({ history: { limit: 50, maxChats: 1000 } })` o
 whatsweb is **unopinionated about LLMs**: it doesn't wrap any model. It just
 turns the conversation into a transcript with `toMessages()`, which you feed to
 your own agent (e.g. the [Vercel AI SDK](https://sdk.vercel.ai)). You stay in
-full control of the model, tools and streaming.
+full control of the model, tools and streaming. For production agents, see
+[AI agents](#ai-agents) below.
 
 ```ts
 import { generateText } from 'ai';
@@ -314,7 +319,124 @@ wa.on('message', async (ctx) => {
 ```
 
 `toMessages()` maps your messages to `assistant` turns and the other party's to
-`user` turns, the exact `{ role, content }` shape agent SDKs expect.
+`user` turns, the exact `{ role, content }` shape agent SDKs expect. Files are
+described in text (`[image]`, `[document: a.pdf]`), and in groups each turn is
+prefixed with the sender's name.
+
+## AI agents
+
+Everything an agent with private data needs. The full example is
+[`examples/ai-bot.ts`](./examples/ai-bot.ts): authorized users in several
+organizations, tools that check access per organization, files and voice notes.
+
+### Authorization
+
+`authorize` runs for every incoming message **before anything else**. Return
+your user to let the message through, or `null` to reject it. Rejected messages
+never reach handlers, `ask()`, transcription or the history: they only emit
+`unauthorized`. If `authorize` throws (e.g. the database is down), the message
+is rejected.
+
+```ts
+const wa = createClient({
+  // Private data: only known numbers, and only in private chats (a reply in a
+  // group is visible to every member).
+  authorize: async ({ phone, isGroup }) =>
+    !isGroup && phone ? await db.findUserByPhone(phone) : null,
+});
+
+wa.on('unauthorized', ({ ctx }) => ctx.reply('This number is not authorized.'));
+
+wa.use(async (ctx) => {
+  const user = ctx.principal!; // what authorize returned
+  // check user.organizations in every tool before reading or changing data
+});
+```
+
+`phone` is the number WhatsApp reports, resolved from the LID when WhatsApp
+hides it. When it can't be resolved it is `undefined`: reject those. Never
+authorize by `name`, which the sender chooses. Type `ctx.principal` once:
+
+```ts
+declare module '@whatsweb/core' {
+  interface Register {
+    principal: { id: string; organizations: string[] };
+  }
+}
+```
+
+### Files in
+
+`ctx.media` describes the file without downloading it (kind, MIME type, file
+name, size, duration, voice note or not). `ctx.downloadAttachment()` returns it
+with its bytes, and `toModelPart()` turns it into an image or file part:
+
+```ts
+if (ctx.media?.mimetype === 'application/pdf') {
+  const pdf = await ctx.downloadAttachment();
+  await generateText({
+    model,
+    messages: [{ role: 'user', content: [toModelPart(pdf), { type: 'text', text: 'Summarize it' }] }],
+  });
+}
+```
+
+### Voice notes
+
+Most models don't take audio, so plug in any speech-to-text service with
+`transcribe`. Authorized voice notes and audio files are transcribed before
+they reach handlers; the text is in `ctx.text` and in the message record.
+
+```ts
+import { transcribe } from 'ai';
+
+createClient({
+  transcribe: async (audio) =>
+    (await transcribe({ model: 'openai/gpt-4o-mini-transcribe', audio: audio.data })).text,
+});
+```
+
+To answer with a voice note, pass any audio to `sendVoice` / `ctx.replyWithVoice`
+(MP3 from a text-to-speech API, WAV, M4A…): it is converted to OGG/Opus, the
+only format WhatsApp plays as a voice note. This needs
+[`ffmpeg`](https://ffmpeg.org) installed (or `ffmpegPath`). Images, videos,
+audio and documents are sent with their real MIME type, detected from the
+content or the file name.
+
+### Your own message store
+
+Keep the conversation in your own database with your own schema. Every message
+(incoming, and the ones you send) is emitted as `message_create`;
+`message.toRecord()` turns it into plain data: id, chat, sender (phone, LID,
+name), timestamp, text, transcript, file details, quoted message, mentions.
+Store `serializeMessage(message)` next to it to download the file, quote or
+forward the message later with `client.restoreMessage()`.
+
+```ts
+const wa = createClient({ history: false }); // you keep the history
+
+wa.use(async (ctx) => {
+  await db.insertMessage({ ...ctx.message.toRecord(), raw: serializeMessage(ctx.message) });
+  const rows = await db.lastMessages(ctx.chatId, 20);
+  const { text } = await generateText({ model, messages: toModelMessages(rows) });
+  await ctx.reply(text);
+});
+```
+
+`toModelMessages(rows)` reads any rows with these fields (a `MessageRecord`
+fits as-is). Add an `attachment` (bytes, or the URL where you stored the file,
+plus its `mimetype`) and images and PDFs are passed to the model as files.
+
+Edits and deletes arrive as `message_edit` and `message_delete`, so you can
+update the stored rows.
+
+### One message at a time per chat
+
+By default the messages of each chat are handled in order, one at a time:
+three quick messages from a user don't start three replies at once. Different
+chats still run in parallel. A message taken as the answer to `ask()` isn't
+handled again. Use `concurrency: 'parallel'` to opt out, and
+`await wa.whenIdle()` before `destroy()` to let in-flight replies finish.
 
 ## Reconnection & rate limiting
 
@@ -357,10 +479,14 @@ wa.on('qr', (qr) => qr.printToTerminal());       // or use qr.raw for your own i
 wa.on('pairing_code', (code) => {});
 wa.on('ready', (info) => {});                     // { jid, lid, number, name }
 wa.on('message', (ctx) => {});                    // incoming (not your own)
-wa.on('message_create', (ctx) => {});             // every message, yours included
+wa.on('message_create', (ctx) => {});             // every message, including the ones you send
+wa.on('message_edit', ({ chatId, id, message }) => {}); // message.body is the new text
+wa.on('message_delete', ({ chatId, id, fromMe }) => {});
 wa.on('reaction', ({ emoji, key, fromMe }) => {});
+wa.on('unauthorized', ({ identity, ctx }) => {});  // rejected by authorize
 wa.on('presence', ({ id, presences }) => {});     // after subscribeToPresence
 wa.on('disconnected', ({ code, reconnecting }) => {});
+wa.on('logged_out', () => {});                    // unlinked from the phone
 wa.on('error', (err) => {});
 ```
 
@@ -377,6 +503,49 @@ const wa = createClient({
   authStrategy: new LocalAuth({ clientId: 'account-1', dataPath: './sessions' }),
 });
 ```
+
+If WhatsApp ends the session (the device is unlinked from the phone, or the
+session expires), the stored credentials can't be used again, so they are
+deleted and `logged_out` is emitted. Call `start()` to link again with a new QR.
+Pass `clearSessionOnLogout: false` to keep them and handle it yourself.
+
+```ts
+wa.on('logged_out', () => wa.start()); // show a fresh QR right away
+```
+
+### Credentials in a database
+
+On servers and containers, keep the session in your database with
+`KeyValueAuth`: implement four methods over any key/value table.
+
+```ts
+import { createClient, KeyValueAuth } from '@whatsweb/core';
+
+// CREATE TABLE whatsapp_auth (key text PRIMARY KEY, value text NOT NULL);
+const wa = createClient({
+  authStrategy: new KeyValueAuth({
+    session: 'agent',
+    store: {
+      get: async (key) =>
+        (await pool.query('SELECT value FROM whatsapp_auth WHERE key = $1', [key])).rows[0]?.value,
+      set: async (key, value) => {
+        await pool.query(
+          'INSERT INTO whatsapp_auth (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
+          [key, value],
+        );
+      },
+      delete: async (key) => {
+        await pool.query('DELETE FROM whatsapp_auth WHERE key = $1', [key]);
+      },
+      deleteByPrefix: async (prefix) => {
+        await pool.query('DELETE FROM whatsapp_auth WHERE starts_with(key, $1)', [prefix]);
+      },
+    },
+  }),
+});
+```
+
+Only one running client may use a session at a time.
 
 ### Multiple accounts
 
@@ -400,13 +569,16 @@ await Promise.all(clients.map((wa) => wa.start()));
 **`createClient(options)`**: `session`, `authStrategy`, `pairingCode`,
 `autoReconnect`, `maxReconnectAttempts`, `reconnectDelayMs`, `rateLimitMs`,
 `stateStore`, `history`, `printQRInTerminal`, `deviceName`, `markOnlineOnConnect`,
-`commandPrefix`, `logger`.
+`clearSessionOnLogout`, `commandPrefix`, `logger`, `authorize`, `transcribe`,
+`concurrency`, `ffmpegPath`.
 
 **Client**
 
 - Lifecycle: `start` / `initialize` / `waitUntilReady` / `logout` / `destroy`.
 - Router: `use` / `command` / `hears`.
-- Async: `messages` / `stream` / `next` / `waitForMessage`.
+- Async: `messages` / `stream` / `next` / `waitForMessage` / `whenIdle`.
+- Agents: `resolveIdentity` / `getPhoneForLid` / `restoreMessage`, plus
+  `toModelMessages` / `toModelPart` / `serializeMessage` / `toOggOpus`.
 - Conversations: `conversation(id)` / `stateFor(id)` / `historyFor(id)` / `clearHistory(id?)`.
 - Send: `send` / `sendText` / `sendImage` / `sendVideo` / `sendAudio` / `sendVoice`
   / `sendDocument` / `sendLocation` / `sendFromLink` / `sendPoll` / `sendSticker` /

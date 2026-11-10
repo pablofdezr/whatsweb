@@ -1,6 +1,6 @@
 {
   "name": "@whatsweb/core",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A great-DX WhatsApp Web SDK for Node.js: no browser, no Puppeteer. Command router, media, groups, presence and per-user conversations, on the native Multi-Device protocol (Baileys 7).",
   "license": "MIT",
   "author": "Pablo Fernández Ruiz <pablofdezruiz@gmail.com>",
@@ -38,10 +38,10 @@
     "example:multi": "tsx examples/multi-account.ts",
     "example:send": "tsx examples/send-message.ts",
     "example:pair": "tsx examples/pair-with-code.ts",
-    "example:ai": "tsx examples/ai-bot.ts"
+    "example:ai": "tsx --env-file-if-exists=.env examples/ai-bot.ts"
   },
   "dependencies": {
-    "baileys": "7.0.0-rc13",
+    "baileys": "7.0.0-rc14",
     "qrcode-terminal": "^0.12.0"
   },
   "devDependencies": {

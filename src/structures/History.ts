@@ -41,6 +41,20 @@ export class History {
     }
   }
 
+  /** Replaces a stored message with a new version (e.g. after an edit). */
+  replace(message: Message): void {
+    const messages = this.chats.get(message.chatId);
+    const index = messages?.findIndex((m) => m.id === message.id) ?? -1;
+    if (messages && index >= 0) messages[index] = message;
+  }
+
+  /** Removes a message (e.g. after it was deleted for everyone). */
+  remove(chatId: string, id: string): void {
+    const messages = this.chats.get(chatId);
+    const index = messages?.findIndex((m) => m.id === id) ?? -1;
+    if (messages && index >= 0) messages.splice(index, 1);
+  }
+
   /** Recent messages for a chat (oldest first). */
   get(chatId: string): Message[] {
     return [...(this.chats.get(chatId) ?? [])];

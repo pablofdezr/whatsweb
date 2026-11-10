@@ -76,14 +76,14 @@ export async function detectMediaKind(link: string): Promise<MediaKind> {
 
   if (/^https?:\/\//i.test(link)) {
     try {
-      const response = await fetch(link, { method: 'HEAD' });
+      const response = await fetch(link, { method: 'HEAD', signal: AbortSignal.timeout(10_000) });
       const contentType = response.headers.get('content-type');
       if (contentType) {
         const byMime = kindFromMime(contentType.split(';')[0]!.trim());
         if (byMime) return byMime;
       }
     } catch {
-      // ignore network/HEAD errors, fall back to document
+      // ignore network/HEAD errors and timeouts, fall back to document
     }
   }
 

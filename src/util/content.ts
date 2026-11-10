@@ -1,4 +1,4 @@
-import { getContentType, type proto } from 'baileys';
+import { getContentType, normalizeMessageContent, type proto } from 'baileys';
 
 /** Message types that contain downloadable media. */
 export const MEDIA_TYPES = [
@@ -14,8 +14,9 @@ export const MEDIA_TYPES = [
  * (`conversation`, `imageMessage`, `extendedTextMessage`, …).
  */
 export function getMessageType(message?: proto.IMessage | null): string | undefined {
-  if (!message) return undefined;
-  return getContentType(message);
+  const content = normalizeMessageContent(message);
+  if (!content) return undefined;
+  return getContentType(content);
 }
 
 /**
@@ -23,7 +24,9 @@ export function getMessageType(message?: proto.IMessage | null): string | undefi
  * plain text, extended text (links/mentions), image/video/document captions
  * and button/list responses.
  */
-export function extractText(message?: proto.IMessage | null): string {
+export function extractText(raw?: proto.IMessage | null): string {
+  // Unwrap ephemeral (disappearing), view-once and similar wrappers first.
+  const message = normalizeMessageContent(raw);
   if (!message) return '';
   const type = getContentType(message);
   if (!type) return '';
@@ -51,6 +54,26 @@ export function extractText(message?: proto.IMessage | null): string {
       return content?.caption ?? content?.text ?? '';
     }
   }
+}
+
+/**
+ * Message types that carry no user content: edits/deletes (`protocolMessage`),
+ * reactions, poll votes, pins and similar. They are not routed as messages.
+ */
+export const CONTROL_TYPES = [
+  'protocolMessage',
+  'reactionMessage',
+  'encReactionMessage',
+  'pollUpdateMessage',
+  'keepInChatMessage',
+  'pinInChatMessage',
+  'encEventResponseMessage',
+] as const;
+
+/** Is it a control message (edit, delete, reaction, …) or one with no content? */
+export function isControlMessage(message?: proto.IMessage | null): boolean {
+  const type = getMessageType(message);
+  return !type || (CONTROL_TYPES as readonly string[]).includes(type);
 }
 
 /** Does the message carry downloadable media? */

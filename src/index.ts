@@ -5,6 +5,9 @@ export type {
   ClientInfo,
   ClientEvents,
   ReactionEvent,
+  MessageEditEvent,
+  MessageDeleteEvent,
+  UnauthorizedEvent,
   PresenceEvent,
 } from './client/options.js';
 export type {
@@ -23,7 +26,8 @@ export { Context } from './router/Context.js';
 export type { Handler, Middleware, MiddlewareNext, Trigger } from './router/types.js';
 
 // --- Structures ---
-export { Message } from './structures/Message.js';
+export { Message, serializeMessage, parseSerializedMessage } from './structures/Message.js';
+export type { MessageRecord, QuotedRecord } from './structures/Message.js';
 export { Chat } from './structures/Chat.js';
 export { Conversation } from './structures/Conversation.js';
 export type {
@@ -45,6 +49,29 @@ export { ConversationState } from './state/ConversationState.js';
 export { LocalAuth } from './auth/LocalAuth.js';
 export type { LocalAuthOptions } from './auth/LocalAuth.js';
 export type { AuthStrategy } from './auth/AuthStrategy.js';
+export { KeyValueAuth } from './auth/KeyValueAuth.js';
+export type { KeyValueStore, KeyValueAuthOptions } from './auth/KeyValueAuth.js';
+export type { Register, Principal, SenderIdentity, Authorizer } from './auth/authorize.js';
+
+// --- AI agents ---
+export {
+  toModelMessages,
+  toModelPart,
+  describeMedia,
+  describeQuote,
+  DEFAULT_MODEL_MEDIA_TYPES,
+} from './agent/model.js';
+export type {
+  ModelMessage,
+  ModelUserPart,
+  ModelTextPart,
+  ModelImagePart,
+  ModelFilePart,
+  ModelAttachment,
+  TranscriptEntry,
+  QuotedEntry,
+  ToModelMessagesOptions,
+} from './agent/model.js';
 
 // --- Media ---
 export { resolveMedia } from './media/resolve.js';
@@ -56,6 +83,10 @@ export {
   fileNameFromLink,
 } from './media/detect.js';
 export type { MediaKind } from './media/detect.js';
+export { getMediaInfo } from './media/attachment.js';
+export type { MediaInfo, Attachment } from './media/attachment.js';
+export { detectMime, mimeFromBuffer, mimeFromName, baseMime, isOggOpus } from './media/mime.js';
+export { toOggOpus, mediaToBuffer } from './media/convert.js';
 
 // --- QR ---
 export { Qr } from './qr/Qr.js';
@@ -72,7 +103,14 @@ export {
   LID_SERVER,
   GROUP_SERVER,
 } from './util/jid.js';
-export { extractText, getMessageType, messageHasMedia, MEDIA_TYPES } from './util/content.js';
+export {
+  extractText,
+  getMessageType,
+  messageHasMedia,
+  isControlMessage,
+  MEDIA_TYPES,
+  CONTROL_TYPES,
+} from './util/content.js';
 export { silentLogger } from './util/logger.js';
 export type { Logger } from './util/logger.js';
 export { parseConfirmation, DEFAULT_YES, DEFAULT_NO } from './util/confirmation.js';
